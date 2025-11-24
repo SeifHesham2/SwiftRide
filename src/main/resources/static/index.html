@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftRide - Pro App (Leaflet)</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --primary-light: #f0eefe;
+            --success: #00b894;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --grey: #6c757d;
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            margin: 0;
+            padding: 24px;
+            background-color: var(--bg-color);
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* --- Role Selector --- */
+        #role-selector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+            max-width: 600px; /* (تم تعديله لـ 2 أزرار) */
+            margin-top: 50px;
+        }
+        #role-selector h2 {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 30px;
+        }
+        .role-buttons {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+        .role-btn {
+            flex: 1;
+            background: var(--card-bg);
+            border: 2px solid #eee;
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            opacity: 0;
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+        .role-btn:nth-child(1) { animation-delay: 0.2s; }
+        .role-btn:nth-child(2) { animation-delay: 0.4s; }
+
+        .role-btn i {
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        .role-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(108, 92, 231, 0.1);
+        }
+
+        /* --- App Container --- */
+        #app-container {
+            display: none; /* Hidden by default */
+            justify-content: center;
+            width: 100%;
+            max-width: 600px; /* Single panel view */
+        }
+
+        #customer-panel, #driver-panel {
+            display: none; /* Panels hidden by default */
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            animation: slideInUp 0.5s ease-out forwards;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .panel-header h2 {
+            color: var(--primary);
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        .panel-header h2 i { margin-right: 10px; }
+        .panel-header .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--grey);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .btn-icon:hover { color: var(--danger); }
+        .btn-icon.back-btn:hover, .btn-icon.edit-btn:hover { color: var(--primary); }
+
+        h3 {
+            color: var(--dark);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            margin-top: 25px;
+            font-weight: 600;
+        }
+
+        h4 {
+            color: var(--primary);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        form { display: flex; flex-direction: column; gap: 12px; }
+
+        #c-register-step-2 {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        input, textarea, select {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+        input:disabled {
+            background-color: #f0f0f0;
+            color: #888;
+            cursor: not-allowed;
+            border-color: #ddd;
+        }
+
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-wrapper input {
+             padding-right: 45px;
+        }
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--grey);
+        }
+
+        .map-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .map-input-wrapper input { padding-right: 55px; }
+        .btn-map {
+            position: absolute;
+            top: 50%; right: 6px;
+            transform: translateY(-50%);
+            background: var(--primary); color: white; border: none;
+            border-radius: var(--radius-md); width: 38px; height: 38px;
+            font-size: 1rem; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-map:hover { background: #5244d9; }
+        #book-trip-form label { font-weight: 500; color: var(--dark); font-size: 0.9em; margin-bottom: -5px; margin-top: 10px; }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: var(--radius-md);
+            background-color: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        button:hover {
+            background-color: #5244d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(108, 92, 231, 0.2);
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-green { background-color: var(--success); }
+        .btn-green:hover { background-color: #009c7a; box-shadow: 0 4px 8px rgba(0, 184, 148, 0.2); }
+        .btn-red { background-color: var(--danger); }
+        .btn-red:hover { background-color: #c23626; box-shadow: 0 4px 8px rgba(231, 76, 60, 0.2); }
+        .btn-grey { background-color: var(--grey); }
+        .btn-grey:hover { background-color: #5a6268; box-shadow: 0 4px 8px rgba(108,117,125,0.2); }
+
+        .dashboard { display: none; }
+        .trip-list { max-height: 280px; overflow-y: auto; padding: 5px; margin-top: 15px;}
+        .empty-state {
+            color: #888;
+            text-align: center;
+            padding: 25px;
+            background: var(--bg-color);
+            border-radius: var(--radius-md);
+        }
+        .empty-state i { font-size: 1.5rem; display: block; margin-bottom: 10px; }
+
+        .trip-card {
+            border: 1px solid #eee;
+            border-left: 5px solid var(--primary);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            opacity: 0;
+            animation: slideInUp 0.5s ease-out forwards;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
+
+        .trip-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        }
+
+        .trip-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .trip-card-header strong { color: var(--dark); font-size: 1.1em; font-weight: 600; }
+        .status {
+            font-weight: 600; padding: 4px 10px; border-radius: 16px; font-size: 0.8em;
+            color: white; text-transform: uppercase;
+        }
+        .status-REQUESTED { background-color: var(--warning); color: var(--dark);}
+        .status-ACCEPTED { background-color: var(--grey); }
+        .status-ONGOING { background-color: var(--primary); }
+        .status-COMPLETED { background-color: var(--success); }
+        .status-CANCELLED_BY_CUSTOMER { background-color: var(--danger); }
+        .status-CANCELLED_BY_DRIVER { background-color: var(--danger); }
+        .status-EXPIRED { background-color: var(--danger); }
+
+
+        .trip-card-body { font-size: 0.95em; color: #555; line-height: 1.7; }
+        .trip-card-body i { margin-right: 8px; color: var(--primary); width: 15px; text-align: center; }
+
+        .trip-actions { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px;}
+        .trip-actions button { font-size: 14px; padding: 8px 12px; font-weight: 500;}
+
+
+        #toast-notification {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background-color: var(--success); color: white; padding: 16px 25px;
+            border-radius: var(--radius-md); box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            z-index: 1000; font-size: 16px; font-weight: 500;
+            transition: top 0.4s ease-out, opacity 0.4s ease-out; opacity: 0;
+        }
+        #toast-notification.show { top: 20px; opacity: 1; }
+        #toast-notification.error { background-color: var(--danger); }
+
+        .auth-toggle { text-align: center; margin-top: 20px; font-size: 0.9em; }
+        .auth-toggle a { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
+
+        /* --- Modal Styles --- */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1050;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            animation: slideInUp 0.4s ease-out;
+            margin: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-header h3 { margin: 0; padding: 0; border: none; }
+        .modal-close {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--grey);
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        .modal-close:hover { color: var(--dark); }
+
+        .profile-pic-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-top: 20px;
+            background: var(--primary-light);
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            background-color: var(--card-bg);
+            border: 4px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            color: var(--primary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .modal-body form { gap: 15px; }
+        .modal-body label {
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.9em;
+            margin-bottom: -8px;
+        }
+
+        /* Map specific styles */
+        #map-modal .modal-content {
+            max-width: 800px; /* Wider for map */
+        }
+        #map-modal .modal-body {
+            padding: 0; /* Remove padding for map to fill space */
+        }
+        #map {
+            width: 100%;
+            height: 500px; /* Crucial: map needs a defined height */
+            cursor: crosshair; /* Indicate clickability */
+        }
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            text-align: right;
+            background-color: var(--bg-color);
+        }
+
+        /* --- Payment Methods CSS --- */
+        .payment-method-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        .payment-btn {
+            flex: 1;
+            padding: 15px 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dark);
+            background: var(--card-bg);
+            border: 2px solid #eee;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 80px;
+        }
+        .payment-btn i {
+            font-size: 1.8rem;
+        }
+        .payment-btn .fa-money-bill-wave {
+            color: var(--success);
+        }
+        .payment-logos {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            height: 25px;
+        }
+        .payment-logos img {
+            height: 100%;
+            width: auto;
+        }
+        .payment-logos .fa-cc-visa {
+            font-size: 2rem;
+            color: #1A1F71;
+        }
+        .payment-logos .fa-cc-mastercard {
+            font-size: 2rem;
+            color: #EB001B;
+        }
+        .payment-btn.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            box-shadow: 0 4px 8px rgba(108, 92, 231, 0.1);
+        }
+        .payment-btn:not(.selected):hover {
+            border-color: var(--grey);
+        }
+
+        /* --- Star Rating CSS --- */
+        .rating-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .star-rating {
+            display: flex;
+            align-items: center;
+        }
+        .star-rating i {
+            font-size: 1.4rem;
+            color: #ccc;
+            cursor: pointer;
+            padding: 0 2px;
+            transition: color 0.2s ease, transform 0.1s ease;
+        }
+        .star-rating i.selected {
+            color: var(--warning);
+        }
+        .star-rating.disabled i {
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .star-rating.interactive-rating i:hover,
+        .star-rating.interactive-rating i.hovered {
+            color: var(--warning);
+            transform: scale(1.1);
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="toast-notification"></div>
+<h1><i class="fas fa-shipping-fast"></i> SwiftRide</h1>
+
+<div id="role-selector">
+    <h2>Who are you?</h2>
+    <div class="role-buttons">
+        <button class="role-btn" id="select-customer-btn">
+            <i class="fas fa-user-circle"></i>
+            I'm a Customer
+        </button>
+        <button class="role-btn" id="select-driver-btn">
+            <i class="fas fa-car"></i>
+            I'm a Driver
+        </button>
+    </div>
+    <p class="auth-toggle">Are you an employee? <a href="employee.html">Login here</a></p>
+</div>
+
+<div id="app-container">
+
+    <div class="panel" id="customer-panel">
+        <div id="customer-auth">
+            <div class="panel-header">
+                <h2><i class="fas fa-user-circle"></i> Customer</h2>
+                <div class="header-buttons">
+                    <button class="btn-icon back-btn" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+                </div>
+            </div>
+            <div id="customer-login-view">
+                <h3><i class="fas fa-sign-in-alt"></i> Login</h3>
+                <form id="customer-login-form">
+                    <input type="email" id="c-login-email" placeholder="Email" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="c-login-password" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                    <button type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
+                </form>
+                <p class="auth-toggle">Don't have an account? <a onclick="toggleAuth('customer-register-view', 'customer-login-view')">Register here</a></p>
+                <p class="auth-toggle" style="margin-top: 10px;"><a onclick="toggleAuth('customer-forgot-password-view', 'customer-login-view')">Forgot Password?</a></p>
+            </div>
+
+            <div id="customer-register-view" style="display: none;">
+                <h3><i class="fas fa-user-plus"></i> Register</h3>
+                <form id="customer-register-form" novalidate>
+                    <input type="text" id="c-firstName" placeholder="First Name" required>
+                    <input type="email" id="c-email" placeholder="Email" required>
+                    <div id="c-register-step-2" style="display: none;">
+                        <input type="text" id="c-lastName" placeholder="Last Name" required>
+                        <div class="password-wrapper">
+                            <input type="password" id="c-password" placeholder="Password" required>
+                            <i class="fas fa-eye toggle-password"></i>
+                        </div>
+                        <input type="text" id="c-phone" placeholder="Phone" required>
+                        <input type="text" id="c-token" placeholder="Verification Token (from email)" required>
+                    </div>
+                    <button type="submit" id="c-register-btn"><i class="fas fa-paper-plane"></i> Send Token</button>
+                </form>
+                <p class="auth-toggle">Already have an account? <a onclick="toggleAuth('customer-login-view', 'customer-register-view')">Login here</a></p>
+            </div>
+
+            <div id="customer-forgot-password-view" style="display: none;">
+                <h3><i class="fas fa-key"></i> Reset Password</h3>
+                <form id="forgot-password-email-form">
+                    <label for="c-forgot-email" style="margin-bottom: 5px; font-size: 1em;">Enter your account email:</label>
+                    <input type="email" id="c-forgot-email" placeholder="Email" required>
+                    <button type="submit"><i class="fas fa-paper-plane"></i> Send Reset Link</button>
+                </form>
+                <form id="forgot-password-reset-form" style="display: none;">
+                    <label for="c-reset-token" style="margin-bottom: 5px; font-size: 1em;">Token (from email):</label>
+                    <input type="text" id="c-reset-token" placeholder="Enter token" required>
+                    <label for="c-reset-new-password" style="margin-bottom: 5px; font-size: 1em;">New Password:</label>
+                    <input type="password" id="c-reset-new-password" placeholder="Enter new password" required>
+                    <button type="submit" class="btn-green"><i class="fas fa-save"></i> Reset Password</button>
+                </form>
+                <p class="auth-toggle">Remembered your password? <a onclick="toggleAuth('customer-login-view', 'customer-forgot-password-view')">Login here</a></p>
+            </div>
+        </div>
+
+        <div id="customer-dashboard" class="dashboard">
+            <div class="panel-header"> <h2><i class="fas fa-user-circle"></i> <span id="customer-name"></span></h2> <div class="header-buttons"> <button class="btn-icon edit-btn" id="edit-customer-profile-btn" title="Edit Profile"><i class="fas fa-user-edit"></i></button> <button class="btn-icon back-btn" title="Go Back"><i class="fas fa-arrow-left"></i></button> <button class="btn-icon" id="customer-logout-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></button> </div> </div>
+
+            <h3><i class="fas fa-plus-circle"></i> Book a New Trip</h3>
+            <form id="book-trip-form">
+                <label for="pickup">Pickup Location</label>
+                <div class="map-input-wrapper">
+                    <input type="text" id="pickup" placeholder="Pickup Location" value="Nasr City, Cairo">
+                    <button type="button" class="btn-map" data-target="pickup" title="Select on Map"> <i class="fas fa-map-marked-alt"></i> </button>
+                </div>
+                <label for="destination">Destination</label>
+                <div class="map-input-wrapper">
+                    <input type="text" id="destination" placeholder="Destination" value="New Cairo, Cairo">
+                    <button type="button" class="btn-map" data-target="destination" title="Select on Map"> <i class="fas fa-map-marked-alt"></i> </button>
+                </div>
+                <label for="tripDate" style="margin-top: 10px;">Trip Date & Time</label>
+                <input type="datetime-local" id="tripDate">
+                <label for="payment-method-selector" style="margin-top: 10px;">Payment Method</label>
+                <div class="payment-method-selector" id="payment-method-selector">
+                    <button type="button" class="payment-btn selected" data-payment="CASH">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Cash
+                    </button>
+                    <button type="button" class="payment-btn" data-payment="WALLET">
+                        <div class="payment-logos">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Meeza.svg/512px-Meeza.svg.png" height="20" alt="Meeza">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Vodafone_logo_2017.png/960px-Vodafone_logo_2017.png" height="20" alt="Vodafone">
+                        </div>
+                        Mobile Wallets
+                    </button>
+                    <button type="button" class="payment-btn" data-payment="VISA">
+                        <div class="payment-logos">
+                            <i class="fab fa-cc-visa"></i>
+                            <i class="fab fa-cc-mastercard"></i>
+                        </div>
+                        Credit Card
+                    </button>
+                </div>
+                <input type="hidden" id="payment-method" value="CASH">
+                <button type="submit" class="btn-green" style="margin-top: 10px;"> <i class="fas fa-paper-plane"></i> Book Trip </button>
+            </form>
+
+            <h3><i class="fas fa-clock"></i> My Current Trips <button class="btn-grey" id="customer-refresh-btn" style="font-size: 12px; padding: 5px 10px; float: right;"><i class="fas fa-sync-alt"></i> Refresh</button></h3> <div id="customer-current-trip"> <div class="empty-state"><i class="fas fa-road"></i><p>You have no active trips.</p></div> </div> <h3><i class="fas fa-history"></i> My Past Trips</h3> <div id="customer-past-trips" class="trip-list"> <div class="empty-state"><i class="fas fa-box-open"></i><p>No past trips found.</p></div> </div>
+        </div>
+    </div>
+
+    <div class="panel" id="driver-panel">
+        <div id="driver-auth">
+            <div class="panel-header">
+                <h2><i class="fas fa-car"></i> Driver</h2>
+                <div class="header-buttons">
+                    <button class="btn-icon back-btn" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+                </div>
+            </div>
+            <div id="driver-login-view">
+                <h3><i class="fas fa-sign-in-alt"></i> Login</h3>
+                <form id="driver-login-form">
+                    <input type="email" id="d-login-email" placeholder="Email" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="d-login-password" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                    <button type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="driver-dashboard" class="dashboard">
+            <div class="panel-header"> <h2><i class="fas fa-car"></i> <span id="driver-name"></span></h2> <div class="header-buttons"> <button class="btn-icon edit-btn" id="edit-driver-profile-btn" title="Edit Profile"><i class="fas fa-user-edit"></i></button> <button class="btn-icon back-btn" title="Go Back"><i class="fas fa-arrow-left"></i></button> <button class="btn-icon" id="driver-logout-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></button> </div> </div> <h3><i class="fas fa-route"></i> My Active Trips</h3> <div id="driver-current-trip" class="trip-list"> <div class="empty-state"><i class="fas fa-coffee"></i><p>You have no active trips.</p></div> </div> <h3><i class="fas fa-list-alt"></i> Available Trips <button id="refresh-requested-btn" class="btn-grey" style="font-size: 12px; padding: 5px 10px; float: right;"><i class="fas fa-sync-alt"></i> Refresh</button></h3> <div id="driver-available-trips" class="trip-list"> <div class="empty-state"><i class="fas fa-bell-slash"></i><p>No requested trips found.</p></div> </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal-backdrop" id="profile-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+        </div>
+        <div class="profile-pic-wrapper"> <div class="profile-pic"> <i class="fas fa-user"></i> </div> </div>
+        <div class="modal-body">
+            <form id="profile-edit-form">
+                <label for="edit-email">Email (Cannot be changed)</label>
+                <input type="email" id="edit-email" placeholder="Email" disabled>
+                <label for="edit-firstName">First Name</label>
+                <input type="text" id="edit-firstName" placeholder="First Name">
+                <label for="edit-lastName">Last Name</label>
+                <input type="text" id="edit-lastName" placeholder="Last Name">
+                <label for="edit-phone">Phone</label>
+                <input type="text" id="edit-phone" placeholder="Phone">
+                <div id="edit-license-wrapper" style="display: none;">
+                    <label for="edit-license">License Number</label>
+                    <input type="text" id="edit-license" placeholder="License Number">
+                </div>
+                <button type="submit" class="btn-green" id="save-profile-btn">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="map-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-map-marked-alt"></i> Select Location</h3>
+            <button class="modal-close" id="map-modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body"> <div id="map"></div> </div>
+        <div class="modal-footer">
+            <button class="btn-green" id="confirm-location-btn">
+                <i class="fas fa-check"></i> Confirm Location
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="payment-details-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="payment-modal-title"><i class="far fa-credit-card"></i> Enter Payment Details</h3>
+            <button class="modal-close" id="payment-modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body" id="payment-modal-body">
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="complaint-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Submit a Complaint</h3>
+            <button class="modal-close" id="complaint-modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="complaint-form">
+                <label for="complaint-message">Please describe your issue:</label>
+                <textarea id="complaint-message" placeholder="My issue is..." rows="5" required></textarea>
+                <input type="hidden" id="complaint-trip-id">
+                <button type="submit" class="btn-red" id="complaint-submit-btn">
+                    <i class="fas fa-paper-plane"></i> Submit Complaint
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<script>
+    // --- LEAFLET MAP VARIABLES ---
+    let map;
+    let marker;
+    let currentMapTargetInput = null;
+
+    const mapModal = document.getElementById('map-modal');
+    const mapModalCloseBtn = document.getElementById('map-modal-close-btn');
+    const confirmLocationBtn = document.getElementById('confirm-location-btn');
+
+    const API_BASE_URL = "http://localhost:8080/api";
+
+    // --- State ---
+    let currentCustomerId = null;
+    let currentDriverId = null;
+    let currentUser = null;
+
+    // --- DOM Elements ---
+    const toast = document.getElementById('toast-notification');
+    const roleSelector = document.getElementById('role-selector');
+    const appContainer = document.getElementById('app-container');
+
+    const profileModal = document.getElementById('profile-modal');
+    const profileEditForm = document.getElementById('profile-edit-form');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const saveProfileBtn = document.getElementById('save-profile-btn');
+
+    // Customer
+    const customerPanel = document.getElementById('customer-panel');
+    const customerAuth = document.getElementById('customer-auth');
+    const customerDashboard = document.getElementById('customer-dashboard');
+    const customerRegisterForm = document.getElementById('customer-register-form');
+    const customerLoginForm = document.getElementById('customer-login-form');
+    const bookTripForm = document.getElementById('book-trip-form');
+    const customerCurrentTripDiv = document.getElementById('customer-current-trip');
+    const customerPastTripsDiv = document.getElementById('customer-past-trips');
+    const customerRefreshBtn = document.getElementById('customer-refresh-btn');
+    const customerLogoutBtn = document.getElementById('customer-logout-btn');
+    const editCustomerProfileBtn = document.getElementById('edit-customer-profile-btn');
+
+    // Driver
+    const driverPanel = document.getElementById('driver-panel');
+    const driverAuth = document.getElementById('driver-auth');
+    const driverDashboard = document.getElementById('driver-dashboard');
+    const driverLoginForm = document.getElementById('driver-login-form');
+    const driverCurrentTripDiv = document.getElementById('driver-current-trip');
+    const driverAvailableTripsDiv = document.getElementById('driver-available-trips');
+    const refreshRequestedBtn = document.getElementById('refresh-requested-btn');
+    const driverLogoutBtn = document.getElementById('driver-logout-btn');
+    const editDriverProfileBtn = document.getElementById('edit-driver-profile-btn');
+
+    // Forgot Password
+    const customerForgotPasswordView = document.getElementById('customer-forgot-password-view');
+    const forgotPasswordEmailForm = document.getElementById('forgot-password-email-form');
+    const forgotPasswordResetForm = document.getElementById('forgot-password-reset-form');
+
+    // Payment Modal
+    const paymentDetailsModal = document.getElementById('payment-details-modal');
+    const paymentModalCloseBtn = document.getElementById('payment-modal-close-btn');
+    const paymentModalBody = document.getElementById('payment-modal-body');
+    const paymentModalTitle = document.getElementById('payment-modal-title');
+    const paymentMethodInput = document.getElementById('payment-method');
+    const paymentMethodSelector = document.getElementById('payment-method-selector');
+    let pendingPaymentMethod = null;
+
+    // Complaint Modal
+    const complaintModal = document.getElementById('complaint-modal');
+    const complaintModalCloseBtn = document.getElementById('complaint-modal-close-btn');
+    const complaintForm = document.getElementById('complaint-form');
+    const complaintMessageInput = document.getElementById('complaint-message');
+    const complaintTripIdInput = document.getElementById('complaint-trip-id');
+
+
+    // --- Dummy Payment HTML ---
+    const cardFormHtml = `
+        <form id="payment-card-form" onsubmit="handlePaymentFormSubmit(event)">
+            <label for="payment-card-name">Name on Card</label>
+            <input type="text" id="payment-card-name" placeholder="Your Name" required>
+            <label for="payment-card-num">Card Number</label>
+            <input type="text" id="payment-card-num" placeholder="0000 0000 0000 0000" required maxlength="19">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label for="payment-card-exp">Expiry</label>
+                    <input type="text" id="payment-card-exp" placeholder="MM/YY" required>
+                </div>
+                <div style="flex: 1;">
+                    <label for="payment-card-cvc">CVC</label>
+                    <input type="text" id="payment-card-cvc" placeholder="123" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-green" id="payment-modal-confirm-btn">
+                <i class="fas fa-check"></i> Confirm Payment
+            </button>
+        </form>`;
+
+    const walletFormHtml = `
+        <form id="payment-wallet-form" onsubmit="handlePaymentFormSubmit(event)">
+            <label for="payment-wallet-phone">Wallet Phone Number</label>
+            <input type="tel" id="payment-wallet-phone" placeholder="e.g., 01001234567" required>
+            <label for="payment-wallet-pin">Wallet PIN </label>
+            <input type="password" id="payment-wallet-pin" placeholder="****" required>
+            <button type="submit" class="btn-green" id="payment-modal-confirm-btn">
+                <i class="fas fa-check"></i> Confirm Payment
+            </button>
+        </form>`;
+
+
+    // --- LEAFLET MAP FUNCTIONS ---
+    function initMap() {
+        const cairo = [30.0444, 31.2357];
+        map = L.map('map').setView(cairo, 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        map.on('click', (event) => {
+            placeMarker(event.latlng);
+        });
+    }
+
+    function placeMarker(position) {
+        if (marker) {
+            marker.setLatLng(position);
+        } else {
+            marker = L.marker(position).addTo(map);
+        }
+        map.panTo(position);
+    }
+
+
+    // --- Helper Functions ---
+    function toggleAuth(showId, hideId) {
+        document.getElementById(showId).style.display = 'block';
+        document.getElementById(hideId).style.display = 'none';
+
+        if (showId === 'customer-login-view') {
+            document.getElementById('forgot-password-email-form').style.display = 'block';
+            document.getElementById('forgot-password-reset-form').style.display = 'none';
+            document.getElementById('forgot-password-email-form').reset();
+            document.getElementById('forgot-password-reset-form').reset();
+        }
+        if (hideId === 'customer-register-view') {
+            const cRegisterStep2Div = document.getElementById('c-register-step-2');
+            const cRegisterBtn = document.getElementById('c-register-btn');
+            customerRegisterForm.reset();
+            if (cRegisterStep2Div) cRegisterStep2Div.style.display = 'none';
+            if (cRegisterBtn) cRegisterBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Token';
+            document.getElementById('c-firstName').disabled = false;
+            document.getElementById('c-email').disabled = false;
+        }
+    }
+
+    function showToast(message, isError = false) {
+        toast.textContent = message;
+        toast.className = 'show';
+        if (isError) {
+            toast.classList.add('error');
+        }
+        setTimeout(() => {
+            toast.className = toast.className.replace('show', '');
+        }, 3000);
+    }
+
+    // ========================================================
+    // 🚀🚀🚀 START: دالة apiCall المعدلة (لحل مشكلة التوكن) 🚀🚀🚀
+    // ========================================================
+    async function apiCall(url, method, body, title) {
+        try {
+            const options = { method: method, headers: { 'Content-Type': 'application/json' }, };
+            if (body) { options.body = JSON.stringify(body); }
+
+            const fullUrl = API_BASE_URL + (url.startsWith('/') ? url : '/' + url);
+            const response = await fetch(fullUrl, options);
+            const contentType = response.headers.get("content-type");
+            let data;
+
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await response.json();
+            } else {
+                data = await response.text();
+            }
+
+            if (!response.ok) {
+                const errorMsg = (typeof data === 'object' && data.message)
+                                 ? data.message
+                                 : (typeof data === 'string' && data.length > 0 ? data : `HTTP Error ${response.status}`);
+                throw { message: errorMsg, body: data };
+            }
+
+            // --- 🚀 START: التعديل للتعرف على رسائل الخطأ النصية 🚀 ---
+            if(method !== 'GET' && typeof data === 'string') {
+                const lowerCaseData = data.toLowerCase();
+                const isErrorString = lowerCaseData.includes('invalid') ||
+                                      lowerCaseData.includes('expired') ||
+                                      lowerCaseData.includes('error') ||
+                                      lowerCaseData.includes('failed') ||
+                                      lowerCaseData.includes('not found') ||
+                                      lowerCaseData.includes('doesn\'t exist');
+
+                if (isErrorString) {
+                    // (اعرضها كخطأ (أحمر) وأوقف التنفيذ)
+                    showToast(data, true);
+                    return null; // (مهم جداً: لإيقاف اللوجيك التالي)
+                } else {
+                    // (هذه رسالة نجاح نصية حقيقية)
+                    const successMsg = (typeof data === 'string') ? data : `${title} successful!`;
+                    showToast(successMsg, false);
+                }
+            }
+            // --- 🚀 END: التعديل 🚀 ---
+
+            return data;
+        } catch (err) {
+            console.error(err);
+            showToast(err.message || `Error in "${title}"`, true);
+            return null;
+        }
+    }
+    // ========================================================
+    // 🚀🚀🚀 END: تعديل دالة apiCall 🚀🚀🚀
+    // ========================================================
+
+    function formatDuration(totalMinutes) { if (!totalMinutes || totalMinutes <= 0) { return 'N/A'; } if (totalMinutes < 60) { return `${totalMinutes} min`; } const hours = Math.floor(totalMinutes / 60); const minutes = totalMinutes % 60; if (minutes === 0) { return `${hours} hr`; } return `${hours} hr ${minutes} min`; }
+    function formatTripDate(dateString) { if (!dateString) return 'N/A'; const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }; return new Date(dateString).toLocaleString('en-US', options); }
+
+    // --- createTripCard (includes Rating logic) ---
+    function createTripCard(trip, userType) {
+        let actionsHtml = '';
+        const status = trip.status.toUpperCase();
+        if (userType === 'customer') {
+            if (status === 'REQUESTED' || status === 'ACCEPTED') {
+                actionsHtml = `<button class="btn-red cancel-cust-btn" data-trip-id="${trip.id}"><i class="fas fa-times"></i> Cancel Trip</button>`;
+            } else if (status === 'ONGOING') {
+                 actionsHtml = `<p><i><i class="fas fa-car-side"></i> Trip is in progress...</i></p>`;
+            } else if (status === 'COMPLETED') {
+                let ratingHtml = '';
+                const currentRating = trip.rating || 0;
+                const driverId = trip.driver ? trip.driver.id : null;
+
+                if (!driverId) {
+                    actionsHtml = `<button class="btn-grey complaint-btn" data-trip-id="${trip.id}"><i class="fas fa-exclamation-triangle"></i> Add Complaint</button>`;
+                } else {
+                    let starsHtml = '';
+                    for (let i = 1; i <= 5; i++) {
+                        const selectedClass = (i <= currentRating) ? 'selected' : '';
+                        starsHtml += `<i class="fas fa-star ${selectedClass}" data-value="${i}"></i>`;
+                    }
+                    if (currentRating > 0) {
+                        ratingHtml = `<div class="rating-wrapper"><div class="star-rating disabled">${starsHtml}</div></div>`;
+                    } else {
+                        ratingHtml = `<div class="rating-wrapper"><div class="star-rating interactive-rating" data-trip-id="${trip.id}" data-driver-id="${driverId}">${starsHtml}</div></div>`;
+                    }
+                    actionsHtml = ratingHtml + `<button class="btn-grey complaint-btn" data-trip-id="${trip.id}"><i class="fas fa-exclamation-triangle"></i> Add Complaint</button>`;
+                }
+            }
+        }
+        else if (userType === 'driver') {
+             if (status === 'REQUESTED') {
+                 actionsHtml = `<button class="btn-green accept-btn" data-trip-id="${trip.id}"><i class="fas fa-check"></i> Accept</button>`;
+             } else if (status === 'ACCEPTED') {
+                 actionsHtml = `
+                    <button class="btn-green start-btn" data-trip-id="${trip.id}"><i class="fas fa-play"></i> Start</button>
+                    <button class="btn-red cancel-driver-btn" data-trip-id="${trip.id}"><i class="fas fa-times"></i> Cancel</button>`;
+            } else if (status === 'ONGOING') {
+                actionsHtml = `<button class="btn-green end-btn" data-trip-id="${trip.id}"><i class="fas fa-stop-circle"></i> End Trip</button>`;
+            }
+        }
+        const fareHtml = `<div><i class="fas fa-money-bill-wave"></i> <strong>Fare:</strong> ${trip.fare ? `EGP ${trip.fare.toFixed(2)}` : 'N/A'}</div>`;
+        const timeHtml = `<div><i class="fas fa-clock"></i> <strong>Duration:</strong> ${formatDuration(trip.estimatedMinutes)}</div>`;
+        const dateHtml = `<div><i class="fas fa-calendar-alt"></i> <strong>Date:</strong> ${formatTripDate(trip.tripDate)}</div>`;
+        return `
+            <div class="trip-card" id="trip-card-${trip.id}" style="border-left-color: ${getStatusColor(status)}">
+                <div class="trip-card-header">
+                    <strong>Trip #${trip.id}</strong>
+                    <span class="status status-${status}">${status}</span>
+                </div>
+                <div class="trip-card-body">
+                    <div><i class="fas fa-map-marker-alt"></i> <strong>From:</strong> ${trip.pickupLocation}</div>
+                    <div><i class="fas fa-flag-checkered"></i> <strong>To:</strong> ${trip.destination}</div>
+                    <div><i class="fas fa-user"></i> <strong>Customer:</strong> ${trip.customer.firstName}</div>
+                    ${trip.driver ? `<div><i class="fas fa-car-side"></i> <strong>Driver:</strong> ${trip.driver.firstName}</div>` : ''}
+                    ${fareHtml}
+                    ${timeHtml}
+                    ${dateHtml}
+                </div>
+                <div class="trip-actions" id="trip-actions-${trip.id}">
+                    ${actionsHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    function getStatusColor(status) {
+        switch(status) {
+            case 'REQUESTED': return 'var(--warning)';
+            case 'ACCEPTED': return 'var(--grey)';
+            case 'ONGOING': return 'var(--primary)';
+            case 'COMPLETED': return 'var(--success)';
+            case 'CANCELLED_BY_CUSTOMER': return 'var(--danger)';
+            case 'CANCELLED_BY_DRIVER': return 'var(--danger)';
+            case 'EXPIRED': return 'var(--danger)';
+            default: return 'var(--grey)';
+        }
+    }
+    function getEmptyState(icon, text) { return `<div class="empty-state"><i class="fas ${icon}"></i><p>${text}</p></div>`; }
+
+    // --- Role Selection Logic ---
+    function selectRole(role) {
+        roleSelector.style.display = 'none';
+        appContainer.style.display = 'flex';
+        if (role === 'customer') {
+            customerPanel.style.display = 'block';
+            driverPanel.style.display = 'none';
+        } else if (role === 'driver') {
+            customerPanel.style.display = 'none';
+            driverPanel.style.display = 'block';
+        }
+    }
+
+    // --- MAP MODAL FUNCTIONS ---
+    function openMapModal(targetInput) {
+        currentMapTargetInput = targetInput;
+        mapModal.style.display = 'flex';
+        if (marker) {
+            marker.remove();
+            marker = null;
+        }
+        setTimeout(() => { if (map) { map.invalidateSize(); } }, 100);
+    }
+    function closeMapModal() { mapModal.style.display = 'none'; }
+
+    // --- Profile Modal Logic ---
+    function openProfileModal(user) {
+        document.getElementById('edit-email').value = user.email;
+        document.getElementById('edit-firstName').value = user.firstName;
+        document.getElementById('edit-lastName').value = user.lastName;
+        document.getElementById('edit-phone').value = user.phone;
+        const licenseWrapper = document.getElementById('edit-license-wrapper');
+        if (user.licenseNumber !== undefined) {
+            licenseWrapper.style.display = 'block';
+            document.getElementById('edit-license').value = user.licenseNumber;
+        } else {
+            licenseWrapper.style.display = 'none';
+        }
+        profileModal.style.display = 'flex';
+    }
+    function closeProfileModal() { profileModal.style.display = 'none'; }
+
+    // --- Complaint Modal Logic ---
+    function openComplaintModal(tripId) {
+        complaintTripIdInput.value = tripId;
+        complaintModal.style.display = 'flex';
+    }
+    function closeComplaintModal() {
+        complaintModal.style.display = 'none';
+        complaintForm.reset();
+    }
+
+
+    // --- INITIALIZE ALL EVENT LISTENERS ---
+    document.addEventListener('DOMContentLoaded', (event) => {
+        initMap();
+        document.getElementById('tripDate').value = new Date().toISOString().slice(0, 16);
+
+        // Role Selection
+        document.getElementById('select-customer-btn').addEventListener('click', () => selectRole('customer'));
+        document.getElementById('select-driver-btn').addEventListener('click', () => selectRole('driver'));
+
+        // Back/Logout buttons
+        document.querySelectorAll('.back-btn').forEach(btn => {
+            btn.addEventListener('click', () => location.reload());
+        });
+        customerLogoutBtn.addEventListener('click', () => location.reload());
+        driverLogoutBtn.addEventListener('click', () => location.reload());
+
+        // Toggle Password
+        appContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('toggle-password')) {
+                const input = e.target.previousElementSibling;
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                e.target.classList.toggle('fa-eye');
+                e.target.classList.toggle('fa-eye-slash');
+            }
+        });
+
+        // --- Profile Modal Listeners ---
+        editCustomerProfileBtn.addEventListener('click', () => openProfileModal(currentUser));
+        editDriverProfileBtn.addEventListener('click', () => openProfileModal(currentUser));
+        modalCloseBtn.addEventListener('click', closeProfileModal);
+        profileModal.addEventListener('click', (e) => { if (e.target === profileModal) { closeProfileModal(); } });
+
+        profileEditForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const originalButtonHtml = saveProfileBtn.innerHTML;
+            saveProfileBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+            saveProfileBtn.disabled = true;
+            const updatedData = { firstName: document.getElementById('edit-firstName').value, lastName: document.getElementById('edit-lastName').value, phone: document.getElementById('edit-phone').value };
+            let url;
+            let isDriver = currentUser.licenseNumber !== undefined;
+            if (isDriver) {
+                updatedData.licenseNumber = document.getElementById('edit-license').value;
+                url = `/drivers/update/${currentUser.id}`;
+            } else {
+                url = `/customers/update/${currentUser.id}`;
+            }
+            const data = await apiCall(url, 'PATCH', updatedData, 'Update Profile');
+            saveProfileBtn.innerHTML = originalButtonHtml;
+            saveProfileBtn.disabled = false;
+            if (data) {
+                currentUser = data;
+                if (isDriver) {
+                    document.getElementById('driver-name').textContent = data.firstName;
+                } else {
+                    document.getElementById('customer-name').textContent = data.firstName;
+                }
+                closeProfileModal();
+            }
+        });
+
+        // --- Map Modal Listeners ---
+        mapModalCloseBtn.addEventListener('click', closeMapModal);
+        mapModal.addEventListener('click', (e) => { if (e.target === mapModal) { closeMapModal(); } });
+        bookTripForm.addEventListener('click', (e) => {
+            const mapButton = e.target.closest('.btn-map');
+            if (mapButton) {
+                e.preventDefault();
+                const targetInputId = mapButton.dataset.target;
+                const targetInputElement = document.getElementById(targetInputId);
+                openMapModal(targetInputElement);
+            }
+        });
+        confirmLocationBtn.addEventListener('click', async () => {
+            if (!marker) { showToast("Please place a pin on the map first.", true); return; }
+            const { lat, lng } = marker.getLatLng();
+            confirmLocationBtn.disabled = true;
+            confirmLocationBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Getting Address...`;
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+            try {
+                const response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                if (!response.ok) { throw new Error(`Nominatim API Error: ${response.statusText}`); }
+                const data = await response.json();
+                if (data && data.display_name) {
+                    currentMapTargetInput.value = data.display_name;
+                    showToast("Location confirmed!");
+                    closeMapModal();
+                } else { showToast("No address found for this location.", true); }
+            } catch (err) { console.error(err); showToast("Failed to get address. Check console.", true);
+            } finally { confirmLocationBtn.disabled = false; confirmLocationBtn.innerHTML = `<i class="fas fa-check"></i> Confirm Location`; }
+        });
+
+
+        // --- Customer Logic Listeners ---
+        customerRegisterForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cRegisterBtn = document.getElementById('c-register-btn');
+            const cRegisterStep2Div = document.getElementById('c-register-step-2');
+            const isStep1 = (cRegisterStep2Div.style.display === 'none');
+            const firstName = document.getElementById('c-firstName').value;
+            const email = document.getElementById('c-email').value;
+
+            if (isStep1) {
+                // --- Step 1: Send Token ---
+                const url = `/customers/register/send-token?email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}`;
+                const originalBtnHtml = cRegisterBtn.innerHTML;
+                cRegisterBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Sending...`;
+                cRegisterBtn.disabled = true;
+                const data = await apiCall(url, 'POST', null, 'Send Token');
+                cRegisterBtn.innerHTML = originalBtnHtml;
+                cRegisterBtn.disabled = false;
+                if (data) {
+                    cRegisterStep2Div.style.display = 'flex';
+                    cRegisterBtn.innerHTML = '<i class="fas fa-user-plus"></i> Complete Registration';
+                    document.getElementById('c-firstName').disabled = true;
+                    document.getElementById('c-email').disabled = true;
+                }
+            } else {
+                // --- Step 2: Complete Registration ---
+                const lastName = document.getElementById('c-lastName').value;
+                const password = document.getElementById('c-password').value;
+                const phone = document.getElementById('c-phone').value;
+                const token = document.getElementById('c-token').value;
+                if (!password || !phone || !token || !lastName) {
+                    showToast("Please fill in all fields.", true);
+                    return;
+                }
+                const body = { firstName: firstName, lastName: lastName, email: email, password: password, phone: phone };
+                const url = `/customers/register?token=${encodeURIComponent(token)}`;
+                const originalBtnHtml = cRegisterBtn.innerHTML;
+                cRegisterBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Registering...`;
+                cRegisterBtn.disabled = true;
+                const data = await apiCall(url, 'POST', body, 'Customer Registration');
+                cRegisterBtn.innerHTML = originalBtnHtml;
+                cRegisterBtn.disabled = false;
+                if (data) {
+                    // (apiCall ستظهر رسالة النجاح النصية بنفسها)
+                    toggleAuth('customer-login-view', 'customer-register-view');
+                    document.getElementById('c-login-email').value = body.email;
+                }
+            }
+        });
+
+        customerLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = { email: document.getElementById('c-login-email').value, password: document.getElementById('c-login-password').value };
+            const data = await apiCall('/customers/login', 'POST', body, 'Customer Login');
+            if (data && data.id) {
+                currentCustomerId = data.id; currentUser = data;
+                document.getElementById('customer-name').textContent = data.firstName;
+                customerAuth.style.display = 'none'; customerDashboard.style.display = 'block';
+                await renderCustomerDashboard();
+            }
+        });
+
+        // ========================================================
+        // 🚀🚀🚀 START: (الإصلاح 1) تعديل فورم حجز الرحلة 🚀🚀🚀
+        // ========================================================
+        bookTripForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const paymentMethod = paymentMethodInput.value;
+            if (!paymentMethod) {
+                showToast("Please select a payment method.", true);
+                return;
+            }
+            const body = {
+                pickupLocation: document.getElementById('pickup').value,
+                destination: document.getElementById('destination').value,
+                tripDate: document.getElementById('tripDate').value + ":00"
+            };
+            const url = `/trips/book?customerId=${currentCustomerId}&paymentMethod=${paymentMethod}`;
+
+            const data = await apiCall(url, 'POST', body, 'Book Trip');
+            if(data) {
+                // --- 🚀 START: الكود المضاف (هذا هو الحل لمشكلتك) 🚀 ---
+                showToast("Trip booked successfully!");
+                // --- 🚀 END: الكود المضاف 🚀 ---
+
+                await renderCustomerDashboard();
+                bookTripForm.reset();
+                document.getElementById('tripDate').value = new Date().toISOString().slice(0, 16);
+                selectPaymentMethod('CASH');
+            }
+        });
+        // ========================================================
+        // 🚀🚀🚀 END: تعديل فورم حجز الرحلة 🚀🚀🚀
+        // ========================================================
+
+        customerRefreshBtn.addEventListener('click', () => { showToast('Refreshing customer trips...'); renderCustomerDashboard(); });
+
+        // --- Customer Dashboard Click Listeners (Rating, Cancel, Complaint) ---
+        customerDashboard.addEventListener('click', async (e) => {
+             const cancelBtn = e.target.closest('.cancel-cust-btn');
+             if (cancelBtn) {
+                const tripId = cancelBtn.dataset.tripId;
+                if(confirm('Are you sure you want to cancel this trip?')) {
+                    const data = await apiCall(`/trips/cancel/customer/${tripId}?customerId=${currentCustomerId}`, 'POST', null, 'Cancel Trip');
+                    if (data) await renderCustomerDashboard();
+                }
+                return;
+            }
+            const complaintBtn = e.target.closest('.complaint-btn');
+            if (complaintBtn) {
+                const tripId = complaintBtn.dataset.tripId;
+                openComplaintModal(tripId);
+                return;
+            }
+            const star = e.target.closest('.interactive-rating i');
+            if (star) {
+                const starRatingDiv = star.closest('.interactive-rating');
+                if (starRatingDiv.classList.contains('disabled')) return;
+                const rating = star.dataset.value;
+                const driverId = starRatingDiv.dataset.driverId;
+                starRatingDiv.classList.add('disabled');
+                starRatingDiv.classList.remove('interactive-rating');
+                starRatingDiv.querySelectorAll('i').forEach(s => s.classList.remove('hovered'));
+                const data = await apiCall(`/drivers/rate/${driverId}?rating=${rating}`, 'POST', null, 'Rate Driver');
+                if (data) {
+                    const allStars = starRatingDiv.querySelectorAll('i');
+                    allStars.forEach(s => {
+                        s.classList.remove('selected');
+                        if (s.dataset.value <= rating) {
+                            s.classList.add('selected');
+                        }
+                    });
+                    showToast(`Driver rated ${rating} stars!`);
+                } else {
+                    starRatingDiv.classList.remove('disabled');
+                    starRatingDiv.classList.add('interactive-rating');
+                }
+            }
+        });
+
+        // --- Star Rating Hover Effect ---
+        customerDashboard.addEventListener('mouseover', (e) => {
+            const star = e.target.closest('.interactive-rating i');
+            if (star) {
+                const starRatingDiv = star.closest('.interactive-rating');
+                const ratingValue = star.dataset.value;
+                starRatingDiv.querySelectorAll('i').forEach(s => {
+                    s.classList.toggle('hovered', s.dataset.value <= ratingValue);
+                });
+            }
+        });
+        customerDashboard.addEventListener('mouseout', (e) => {
+             const starDiv = e.target.closest('.interactive-rating');
+             if (starDiv && !starDiv.contains(e.relatedTarget)) {
+                 starDiv.querySelectorAll('i').forEach(s => s.classList.remove('hovered'));
+             }
+        });
+
+
+        // --- Driver Logic Listeners ---
+        driverLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = { email: document.getElementById('d-login-email').value, password: document.getElementById('d-login-password').value };
+            const data = await apiCall('/drivers/login', 'POST', body, 'Driver Login');
+            if (data && data.id) {
+                currentDriverId = data.id; currentUser = data;
+                document.getElementById('driver-name').textContent = data.firstName;
+                driverAuth.style.display = 'none'; driverDashboard.style.display = 'block';
+                await renderDriverAvailableTrips();
+                await renderDriverActiveTrips();
+            }
+        });
+
+        refreshRequestedBtn.addEventListener('click', () => { showToast('Refreshing available trips...'); renderDriverAvailableTrips(); });
+
+        // ========================================================
+        // 🚀🚀🚀 START: (الإصلاح 2) تعديل لوجيك إرسال الإيميل (بناءً على طلبك) 🚀🚀🚀
+        // ========================================================
+        driverDashboard.addEventListener('click', async (e) => {
+            const btn = e.target.closest('button[data-trip-id]'); if (!btn || !currentDriverId) return; const tripId = btn.dataset.tripId; btn.disabled = true; let data; let refreshAvailable = false; let refreshActive = false;
+
+            if (btn.classList.contains('accept-btn')) {
+                // الخطوة 1: قبول الرحلة
+                data = await apiCall(`/trips/accept/${tripId}?driverId=${currentDriverId}`, 'POST', null, 'Accept Trip');
+                if (data) {
+                    refreshAvailable = true;
+                    refreshActive = true;
+                    // --- 🚀 START: الكود المضاف لإرسال الإيميل (معدل) 🚀 ---
+                    try {
+                        const customerId = data.customer.id;
+                        // الخطوة 3: إرسال الإيميل (بالرابط الجديد)
+                        const emailUrl = `/customers/trip/send-email?customerId=${customerId}&driverId=${currentDriverId}&tripId=${tripId}`;
+
+                        // (لا نستخدم await هنا لكي لا نُعطل تحديث الواجهة)
+                        apiCall(emailUrl, 'POST', null, 'Send Acceptance Email')
+                            .then(emailData => {
+                                if(emailData) console.log('Email API success:', emailData);
+                            })
+                            .catch(err => {
+                                console.error('Email API call failed:', err);
+                            });
+
+                    } catch (e) {
+                        console.error("خطأ في تجهيز بيانات الإيميل:", e, data);
+                        showToast("Trip accepted, but an error occurred while preparing the email.", true);
+                    }
+                    // --- 🚀 END: الكود المضاف 🚀 ---
+                }
+
+            } else if (btn.classList.contains('start-btn')) {
+                data = await apiCall(`/trips/start/${tripId}?driverId=${currentDriverId}`, 'POST', null, 'Start Trip'); if (data) refreshActive = true;
+
+            } else if (btn.classList.contains('end-btn')) {
+                data = await apiCall(`/trips/end/${tripId}?driverId=${currentDriverId}`, 'POST', null, 'End Trip'); if (data) { refreshActive = true; showToast('Trip Ended! Customer can now refresh.'); }
+
+            } else if (btn.classList.contains('cancel-driver-btn')) {
+                if(confirm('Are you sure you want to cancel this trip?')) { data = await apiCall(`/trips/cancel/driver/${tripId}?driverId=${currentDriverId}`, 'POST', null, 'Cancel Trip'); if (data) { refreshAvailable = true; refreshActive = true; } } else { btn.disabled = false; return; }
+            }
+
+            if (refreshActive) await renderDriverActiveTrips();
+            if (refreshAvailable) await renderDriverAvailableTrips();
+            if (!data && btn) btn.disabled = false;
+        });
+        // ========================================================
+        // 🚀🚀🚀 END: تعديل لوجيك إرسال الإيميل 🚀🚀🚀
+        // ========================================================
+
+
+        // --- Payment Method Listeners ---
+        paymentMethodSelector.addEventListener('click', (e) => {
+            const clickedBtn = e.target.closest('.payment-btn');
+            if (!clickedBtn) return;
+            const paymentType = clickedBtn.dataset.payment;
+            if (paymentType === 'CASH') {
+                selectPaymentMethod(paymentType);
+            } else {
+                pendingPaymentMethod = paymentType;
+                if (paymentType === 'WALLET') {
+                    paymentModalTitle.innerHTML = `<i class="fas fa-wallet"></i> Enter Wallet Details`;
+                    paymentModalBody.innerHTML = walletFormHtml;
+                } else if (paymentType === 'VISA') {
+                    paymentModalTitle.innerHTML = `<i class="far fa-credit-card"></i> Enter Card Details`;
+                    paymentModalBody.innerHTML = cardFormHtml;
+                }
+                paymentDetailsModal.style.display = 'flex';
+            }
+        });
+        paymentModalCloseBtn.addEventListener('click', () => { paymentDetailsModal.style.display = 'none'; });
+        paymentDetailsModal.addEventListener('click', (e) => { if (e.target === paymentDetailsModal) { paymentDetailsModal.style.display = 'none'; } });
+
+        // --- Handle Dummy Payment Form Submit ---
+        function handlePaymentFormSubmit(e) {
+            e.preventDefault();
+            if (pendingPaymentMethod) {
+                selectPaymentMethod(pendingPaymentMethod);
+                showToast(`${pendingPaymentMethod} details added (Simulation).`);
+                pendingPaymentMethod = null;
+                paymentDetailsModal.style.display = 'none';
+            }
+        }
+        paymentModalBody.addEventListener('submit', (e) => {
+             if (e.target.id === 'payment-card-form' || e.target.id === 'payment-wallet-form') {
+                 handlePaymentFormSubmit(e);
+             }
+        });
+        // --- Credit Card Input Formatter ---
+        paymentModalBody.addEventListener('input', (e) => {
+            if (e.target.id === 'payment-card-num') {
+                let v = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+                let parts = [];
+                for (let i = 0; i < v.length; i += 4) { parts.push(v.substring(i, i + 4)); }
+                if (parts.length > 0) { e.target.value = parts.join(' '); } else { e.target.value = v; }
+            }
+        });
+
+        // --- Complaint Modal Listeners ---
+        complaintModalCloseBtn.addEventListener('click', closeComplaintModal);
+        complaintModal.addEventListener('click', (e) => { if (e.target === complaintModal) { closeComplaintModal(); } });
+        complaintForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = complaintMessageInput.value;
+            const tripId = complaintTripIdInput.value;
+            if (!message || message.trim() === "") {
+                showToast("Complaint message cannot be empty.", true);
+                return;
+            }
+            const body = { message: message };
+            const data = await apiCall(`/complaints/send/complaint?customerId=${currentCustomerId}&tripId=${tripId}`, 'POST', body, 'Submit Complaint');
+            if (data) {
+                // (apiCall ستظهر رسالة النجاح النصية بنفسها)
+                closeComplaintModal();
+            }
+        });
+
+        // --- Forgot Password Listeners ---
+        forgotPasswordEmailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('c-forgot-email').value;
+            const url = `/customers/forgot-password?email=${encodeURIComponent(email)}`;
+            const data = await apiCall(url, 'POST', null, 'Forgot Password');
+            if(data) {
+                // (apiCall ستعرض التوست الأخضر "Token sent...")
+                forgotPasswordEmailForm.style.display = 'none';
+                forgotPasswordResetForm.style.display = 'block';
+            }
+        });
+        forgotPasswordResetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = document.getElementById('c-reset-token').value;
+            const newPassword = document.getElementById('c-reset-new-password').value;
+            const url = `/customers/reset-password?token=${encodeURIComponent(token)}&newPassword=${encodeURIComponent(newPassword)}`;
+            const data = await apiCall(url, 'POST', null, 'Reset Password');
+            if(data) {
+                // (apiCall ستعرض التوست الأخضر "Password reset...")
+                toggleAuth('customer-login-view', 'customer-forgot-password-view');
+            }
+        });
+
+    }); // End of DOMContentLoaded
+
+    // --- Select Payment Method Helper ---
+    function selectPaymentMethod(paymentType) {
+        paymentMethodInput.value = paymentType;
+        document.querySelectorAll('.payment-btn').forEach(btn => {
+            btn.classList.toggle('selected', btn.dataset.payment === paymentType);
+        });
+    }
+
+    // --- CUSTOMER DASHBOARD RENDER ---
+    async function renderCustomerDashboard() {
+        if (!currentCustomerId) return;
+        const emptyCurrent = getEmptyState('fa-road', 'You have no active trips.');
+        const emptyPast = getEmptyState('fa-box-open', 'No past trips found.');
+
+        // (الكود هنا سليم، سيطلب الرحلات وإذا لم يجد سيعرض "No active trips")
+        const allTrips = await apiCall(`/trips/customer/trips/${currentCustomerId}`, 'GET', null, 'Fetch All Trips');
+        if (allTrips) {
+             const activeTrips = allTrips.filter(t => ['REQUESTED', 'ACCEPTED', 'ONGOING'].includes(t.status.toUpperCase()) );
+             if (activeTrips.length > 0) {
+                customerCurrentTripDiv.innerHTML = '';
+                activeTrips.sort((a, b) => b.id - a.id).forEach(trip => { customerCurrentTripDiv.innerHTML += createTripCard(trip, 'customer'); });
+             } else { customerCurrentTripDiv.innerHTML = emptyCurrent; }
+        } else { customerCurrentTripDiv.innerHTML = emptyCurrent; }
+
+        // (الكود هنا سليم، سيطلب الرحلات وإذا لم يجد سيعرض "No past trips found")
+        const pastTrips = await apiCall(`/trips/customer/previous-trips?customerId=${currentCustomerId}`, 'GET', null, 'Fetch Previous Trips');
+        if (pastTrips && pastTrips.length > 0) {
+            customerPastTripsDiv.innerHTML = '';
+            pastTrips.sort((a, b) => b.id - a.id).forEach(trip => { customerPastTripsDiv.innerHTML += createTripCard(trip, 'customer'); });
+        } else { customerPastTripsDiv.innerHTML = emptyPast; }
+    }
+
+    // --- DRIVER DASHBOARD RENDERS ---
+    async function renderDriverAvailableTrips() {
+         const data = await apiCall('/trips/requested', 'GET', null, 'Get Requested Trips');
+        driverAvailableTripsDiv.innerHTML = '';
+        if (data && data.length > 0) {
+            data.sort((a, b) => b.id - a.id).forEach(trip => { driverAvailableTripsDiv.innerHTML += createTripCard(trip, 'driver'); });
+        } else { driverAvailableTripsDiv.innerHTML = getEmptyState('fa-bell-slash', 'No requested trips found.'); }
+    }
+    async function renderDriverActiveTrips() {
+        if (!currentDriverId) return;
+        const data = await apiCall(`/trips/driver/trips/active/${currentDriverId}`, 'GET', null, 'Fetch Driver Active Trips');
+        driverCurrentTripDiv.innerHTML = '';
+        if (data && data.length > 0) {
+            data.sort((a, b) => b.id - a.id).forEach(trip => { driverCurrentTripDiv.innerHTML += createTripCard(trip, 'driver'); });
+        } else { driverCurrentTripDiv.innerHTML = getEmptyState('fa-coffee', 'You have no active trips.'); }
+    }
+
+</script>
+</body>
+</html>

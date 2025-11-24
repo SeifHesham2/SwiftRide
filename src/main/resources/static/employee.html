@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftRide - Employee Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --primary-light: #f0eefe;
+            --success: #00b894;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --grey: #6c757d;
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            margin: 0;
+            padding: 24px;
+            background-color: var(--bg-color);
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* (تم حذف ستايل اختيار الأدوار) */
+
+        /* --- App Container --- */
+        #app-container {
+            /* (يظهر مباشرة) */
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px; /* Single panel view */
+        }
+
+        #employee-panel {
+            /* (يظهر مباشرة) */
+            display: block;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            animation: slideInUp 0.5s ease-out forwards;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .panel-header h2 {
+            color: var(--primary);
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        .panel-header h2 i { margin-right: 10px; }
+        .panel-header .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--grey);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .btn-icon:hover { color: var(--danger); }
+        .btn-icon.back-btn:hover, .btn-icon.edit-btn:hover { color: var(--primary); }
+
+        h3 {
+            color: var(--dark);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            margin-top: 25px;
+            font-weight: 600;
+        }
+
+        h4 {
+            color: var(--primary);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        form { display: flex; flex-direction: column; gap: 12px; }
+
+        input, textarea, select {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+        input:disabled {
+            background-color: #f0f0f0;
+            color: #888;
+            cursor: not-allowed;
+            border-color: #ddd;
+        }
+
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-wrapper input {
+             padding-right: 45px;
+        }
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--grey);
+        }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: var(--radius-md);
+            background-color: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        button:hover {
+            background-color: #5244d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(108, 92, 231, 0.2);
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-green { background-color: var(--success); }
+        .btn-green:hover { background-color: #009c7a; box-shadow: 0 4px 8px rgba(0, 184, 148, 0.2); }
+        .btn-red { background-color: var(--danger); }
+        .btn-red:hover { background-color: #c23626; box-shadow: 0 4px 8px rgba(231, 76, 60, 0.2); }
+        .btn-grey { background-color: var(--grey); }
+        .btn-grey:hover { background-color: #5a6268; box-shadow: 0 4px 8px rgba(108,117,125,0.2); }
+
+        .dashboard { display: none; }
+        .trip-list { max-height: 280px; overflow-y: auto; padding: 5px; margin-top: 15px;}
+        .empty-state {
+            color: #888;
+            text-align: center;
+            padding: 25px;
+            background: var(--bg-color);
+            border-radius: var(--radius-md);
+        }
+        .empty-state i { font-size: 1.5rem; display: block; margin-bottom: 10px; }
+
+
+        .status {
+            font-weight: 600; padding: 4px 10px; border-radius: 16px; font-size: 0.8em;
+            color: white; text-transform: uppercase;
+        }
+        /* --- 🚀 CSS لكارت الشكوى 🚀 --- */
+        .complaint-card {
+            border: 1px solid #eee;
+            border-left: 5px solid var(--danger);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            opacity: 0;
+            animation: slideInUp 0.5s ease-out forwards;
+        }
+        .complaint-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .complaint-card-header strong { color: var(--danger); font-size: 1.1em; font-weight: 600; }
+        .complaint-card-header span { color: var(--grey); font-size: 0.9em; }
+        .complaint-card-body { font-size: 0.95em; color: #555; line-height: 1.7; }
+        .complaint-card-body i { margin-right: 8px; color: var(--primary); width: 15px; text-align: center; }
+        .complaint-card-body p {
+            background-color: var(--bg-color);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            margin-top: 8px;
+            font-style: italic;
+        }
+        .complaint-actions { margin-top: 15px; display: flex; gap: 10px;}
+        .complaint-actions button { font-size: 14px; padding: 8px 12px; font-weight: 500;}
+
+        .status-NEW { background-color: var(--warning); color: var(--dark); }
+        .status-OPENED { background-color: var(--primary); }
+        .status-CLOSED { background-color: var(--success); }
+        /* --- 🚀 نهاية CSS الشكوى 🚀 --- */
+
+        /* --- 🚀 CSS جديد لكارت السيارة 🚀 --- */
+        .car-card {
+            border: 1px solid #eee;
+            border-left: 5px solid var(--grey);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .car-card.available {
+            border-left-color: var(--success);
+        }
+        .car-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .car-card-header strong {
+            color: var(--dark);
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        .car-card-status {
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.8em;
+            color: white;
+            text-transform: uppercase;
+        }
+        .car-card-status.available {
+            background-color: var(--success);
+        }
+        .car-card-status.assigned {
+            background-color: var(--grey);
+        }
+        .car-card-body { font-size: 0.95em; color: #555; line-height: 1.7; }
+        .car-card-body i { margin-right: 8px; color: var(--primary); width: 15px; text-align: center; }
+        /* --- 🚀 نهاية CSS السيارة 🚀 --- */
+
+
+        #toast-notification {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background-color: var(--success); color: white; padding: 16px 25px;
+            border-radius: var(--radius-md); box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            z-index: 1000; font-size: 16px; font-weight: 500;
+            transition: top 0.4s ease-out, opacity 0.4s ease-out; opacity: 0;
+        }
+        #toast-notification.show { top: 20px; opacity: 1; }
+        #toast-notification.error { background-color: var(--danger); }
+
+        .auth-toggle { text-align: center; margin-top: 20px; font-size: 0.9em; }
+        .auth-toggle a { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
+
+        /* --- 🚀 CSS for Employee Hub 🚀 --- */
+        .hub-buttons {
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically */
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .hub-btn {
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--card-bg);
+            border: 2px solid #eee;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            text-align: left; /* Align text left */
+        }
+        .hub-btn i {
+            margin-right: 15px;
+            font-size: 1.5rem;
+            width: 30px; /* Give icon space */
+            text-align: center;
+        }
+        .hub-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(108, 92, 231, 0.1);
+        }
+        .employee-back-btn {
+            margin-bottom: 20px; /* Space it from the title */
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 12px;
+        }
+        /* --- 🚀 End of Hub CSS 🚀 --- */
+    </style>
+</head>
+<body>
+
+<div id="toast-notification"></div>
+<h1><i class="fas fa-shipping-fast"></i> SwiftRide - Employee Portal</h1>
+
+<div id="app-container" style="display: flex;">
+
+    <div class="panel" id="employee-panel" style="display: block;">
+        <div id="employee-auth">
+            <div class="panel-header">
+                <h2><i class="fas fa-briefcase"></i> Employee</h2>
+                <div class="header-buttons">
+                    <a href="index.html" class="btn-icon back-btn" title="Back to Main Page"><i class="fas fa-home"></i></a>
+                </div>
+            </div>
+            <div id="employee-login-view">
+                <h3><i class="fas fa-sign-in-alt"></i> Login</h3>
+                <form id="employee-login-form">
+                    <input type="email" id="e-login-email" placeholder="Email" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="e-login-password" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                    <button type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
+                </form>
+                <p class="auth-toggle">Don't have an account? <a onclick="toggleAuth('employee-register-view', 'employee-login-view')">Register here</a></p>
+            </div>
+            <div id="employee-register-view" style="display: none;">
+                <h3><i class="fas fa-user-plus"></i> Register</h3>
+                <form id="employee-register-form">
+                    <input type="text" id="e-firstName" placeholder="First Name" required>
+                    <input type="text" id="e-lastName" placeholder="Last Name" required>
+                    <input type="email" id="e-email" placeholder="Email" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="e-password" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                    <input type="text" id="e-phone" placeholder="Phone" required>
+                    <button type="submit"><i class="fas fa-user-plus"></i> Register</button>
+                </form>
+                <p class="auth-toggle">Already have an account? <a onclick="toggleAuth('employee-login-view', 'employee-register-view')">Login here</a></p>
+            </div>
+        </div>
+
+        <div id="employee-dashboard" class="dashboard">
+            <div class="panel-header">
+                <h2><i class="fas fa-briefcase"></i> <span id="employee-name"></span></h2>
+                <div class="header-buttons">
+                    <button class="btn-icon" id="employee-logout-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </div>
+
+            <div id="employee-hub">
+                <h3>Employee Menu</h3>
+                <div class="hub-buttons">
+                    <button class="hub-btn" id="hub-btn-drivers">
+                        <i class="fas fa-user-plus"></i>
+                        Register Driver
+                    </button>
+                    <button class="hub-btn" id="hub-btn-cars">
+                        <i class="fas fa-car-side"></i>
+                        Manage Cars
+                    </button>
+                    <button class="hub-btn" id="hub-btn-complaints">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Manage Complaints
+                    </button>
+                </div>
+            </div>
+
+            <div id="employee-driver-registration" style="display: none;">
+                <button class="btn-grey employee-back-btn"><i class="fas fa-arrow-left"></i> Back to Menu</button>
+                <h3><i class="fas fa-user-plus"></i> Register a New Driver</h3>
+                <form id="employee-register-driver-form">
+                    <input type="text" id="new-d-firstName" placeholder="Driver First Name" required>
+                    <input type="text" id="new-d-lastName" placeholder="Driver Last Name" required>
+                    <input type="email" id="new-d-email" placeholder="Driver Email" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="new-d-password" placeholder="Driver Password" required>
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                    <input type="text" id="new-d-phone" placeholder="Driver Phone" required>
+                    <input type="text" id="new-d-license" placeholder="License Number" required>
+                    <button type="submit" class="btn-green"><i class="fas fa-user-plus"></i> Register Driver</button>
+                </form>
+            </div>
+
+            <div id="employee-car-management" style="display: none;">
+                <button class="btn-grey employee-back-btn"><i class="fas fa-arrow-left"></i> Back to Menu</button>
+                <h3>
+                    <i class="fas fa-car-side"></i> Car Management
+                    <button id="refresh-cars-btn" class="btn-grey" style="font-size: 12px; padding: 5px 10px; float: right;">
+                        <i class="fas fa-sync-alt"></i> Refresh Cars
+                    </button>
+                </h3>
+
+                <h4><i class="fas fa-car-alt"></i> Register a New Car</h4>
+                <form id="register-car-form">
+                    <input type="text" id="car-model" placeholder="Model (e.g., Corolla)" required>
+                    <input type="text" id="car-licensePlate" placeholder="License Plate" required>
+                    <input type="text" id="car-color" placeholder="Color" required>
+                    <button type="submit" class="btn-green"><i class="fas fa-plus-circle"></i> Register Car</button>
+                </form>
+
+                <h4><i class="fas fa-link"></i> Assign Car to Driver</h4>
+                <form id="assign-car-form">
+                    <label for="assign-car-select">Select an Available Car:</label>
+                    <select id="assign-car-select" required>
+                        <option value="">Loading available cars...</option>
+                    </select>
+
+                    <label for="assign-driver-select" style="margin-top: 10px;">Select a Driver (Without Car):</label>
+                    <select id="assign-driver-select" required>
+                        <option value="">Loading available drivers...</option>
+                    </select>
+
+                    <button type="submit" style="margin-top: 10px;"><i class="fas fa-link"></i> Assign Car</button>
+                </form>
+
+                <h4><i class="fas fa-clipboard-list"></i> All Registered Cars</h4>
+                <div id="all-cars-list" class="trip-list">
+                    <div class="empty-state"><i class="fas fa-car"></i><p>No cars found.</p></div>
+                </div>
+            </div>
+
+            <div id="employee-complaints-management" style="display: none;">
+                <button class="btn-grey employee-back-btn"><i class="fas fa-arrow-left"></i> Back to Menu</button>
+                <h3>
+                    <i class="fas fa-exclamation-triangle"></i> Complaints Management
+                    <button id="refresh-complaints-btn" class="btn-grey" style="font-size: 12px; padding: 5px 10px; float: right;">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </h3>
+                <h4><i class="fas fa-flag"></i> New Complaints</h4>
+                <div id="complaints-list-NEW" class="trip-list">
+                    <div class="empty-state"><i class="fas fa-comment-slash"></i><p>No new complaints.</p></div>
+                </div>
+                <h4><i class="fas fa-folder-open"></i> Open Complaints</h4>
+                <div id="complaints-list-OPEN" class="trip-list">
+                    <div class="empty-state"><i class="fas fa-comment-slash"></i><p>No open complaints.</p></div>
+                </div>
+                <h4><i class="fas fa-check-circle"></i> Closed Complaints</h4>
+                <div id="complaints-list-CLOSED" class="trip-list">
+                    <div class="empty-state"><i class="fas fa-comment-slash"></i><p>No closed complaints.</p></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // (تم حذف كل ما يخص الخريطة من هنا)
+
+    const API_BASE_URL = "http://localhost:8080/api";
+
+    // --- 🚀 State (معدل) 🚀 ---
+    let currentEmployeeId = null;
+    let currentUser = null;
+
+    // --- 🚀 DOM Elements (معدل) 🚀 ---
+    const toast = document.getElementById('toast-notification');
+    const appContainer = document.getElementById('app-container');
+
+    // (تم حذف عناصر العميل والسائق)
+
+    // Employee
+    const employeePanel = document.getElementById('employee-panel');
+    const employeeAuth = document.getElementById('employee-auth');
+    const employeeDashboard = document.getElementById('employee-dashboard');
+    const employeeRegisterForm = document.getElementById('employee-register-form');
+    const employeeLoginForm = document.getElementById('employee-login-form');
+    const employeeLogoutBtn = document.getElementById('employee-logout-btn');
+    const employeeRegisterDriverForm = document.getElementById('employee-register-driver-form');
+
+    // (جديد) عناصر الشكاوى
+    const refreshComplaintsBtn = document.getElementById('refresh-complaints-btn');
+    const complaintsListNewDiv = document.getElementById('complaints-list-NEW');
+    const complaintsListOpenDiv = document.getElementById('complaints-list-OPEN');
+    const complaintsListClosedDiv = document.getElementById('complaints-list-CLOSED');
+
+    // (جديد) عناصر السيارات
+    const registerCarForm = document.getElementById('register-car-form');
+    const assignCarForm = document.getElementById('assign-car-form');
+    const assignCarSelect = document.getElementById('assign-car-select');
+    const assignDriverSelect = document.getElementById('assign-driver-select');
+    const refreshCarsBtn = document.getElementById('refresh-cars-btn');
+    const allCarsListDiv = document.getElementById('all-cars-list');
+
+    // (جديد) عناصر أقسام الموظف
+    const employeeHub = document.getElementById('employee-hub');
+    const employeeDriverRegistration = document.getElementById('employee-driver-registration');
+    const employeeCarManagement = document.getElementById('employee-car-management');
+    const employeeComplaintsManagement = document.getElementById('employee-complaints-management');
+
+    // (تم حذف كل المودالات من هنا)
+
+    // --- 🚀 Helper Functions (بدون تغيير) 🚀 ---
+    function toggleAuth(showId, hideId) {
+        document.getElementById(showId).style.display = 'block';
+        document.getElementById(hideId).style.display = 'none';
+    }
+
+    function showToast(message, isError = false) {
+        toast.textContent = message;
+        toast.className = 'show';
+        if (isError) {
+            toast.classList.add('error');
+        }
+        setTimeout(() => {
+            toast.className = toast.className.replace('show', '');
+        }, 3000);
+    }
+
+    async function apiCall(url, method, body, title) {
+        try {
+            const options = { method: method, headers: { 'Content-Type': 'application/json' }, };
+            if (body) { options.body = JSON.stringify(body); }
+            const response = await fetch(API_BASE_URL + url, options);
+            const data = await response.json();
+            if (!response.ok) {
+                const errorMsg = data.message || (typeof data === 'string' ? data : `HTTP Error ${response.status}`);
+                throw { message: errorMsg, body: data };
+            }
+            if(method !== 'GET') showToast(`${title} successful!`, false);
+            return data;
+        } catch (err) {
+            console.error(err);
+            showToast(err.message || `Error in "${title}"`, true);
+            return null;
+        }
+    }
+
+    // (تم حذف دوال تنسيق الرحلات)
+
+    function getEmptyState(icon, text) { return `<div class="empty-state"><i class="fas ${icon}"></i><p>${text}</p></div>`; }
+
+    // --- 🚀 دالة معدلة لإنشاء كارت الشكوى (مع الأزرار) 🚀 ---
+    function createComplaintCard(complaint) {
+        const customerName = complaint.customer ? `${complaint.customer.firstName} ${complaint.customer.lastName}` : 'Unknown';
+        const tripId = complaint.trip ? complaint.trip.id : 'N/A';
+        const message = complaint.message ? complaint.message : 'No message provided.';
+        const status = complaint.status ? complaint.status.toUpperCase() : 'NEW';
+
+        let actionsHtml = '';
+        if (status === 'NEW') {
+            actionsHtml = `<button class="btn-green open-complaint-btn" data-complaint-id="${complaint.id}"><i class="fas fa-folder-open"></i> Open</button>`;
+        } else if (status === 'OPENED') {
+            actionsHtml = `<button class="btn-red close-complaint-btn" data-complaint-id="${complaint.id}"><i class="fas fa-check-circle"></i> Close</button>`;
+        }
+
+        let borderColor = 'var(--danger)';
+        if(status === 'OPENED') borderColor = 'var(--primary)';
+        if(status === 'CLOSED') borderColor = 'var(--success)';
+
+        return `
+            <div class="complaint-card" id="complaint-card-${complaint.id}" style="border-left-color: ${borderColor}">
+                <div class="complaint-card-header">
+                    <strong>Complaint #${complaint.id}</strong>
+                    <span class="status status-${status}">${status}</span>
+                </div>
+                <div class="complaint-card-body">
+                    <div><i class="fas fa-user"></i> <strong>Customer:</strong> ${customerName}</div>
+                    <div><i class="fas fa-link"></i> <strong>Trip ID:</strong> ${tripId}</div>
+                    <div><i class="fas fa-comment-dots"></i> <strong>Message:</strong></div>
+                    <p>${message}</p>
+                </div>
+                <div class="complaint-actions">
+                    ${actionsHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    // --- 🚀 دالة جديدة لإنشاء كارت السيارة 🚀 ---
+    function createCarCard(car) {
+        const isAvailable = car.driver === null;
+        const statusClass = isAvailable ? 'available' : 'assigned';
+        const statusText = isAvailable ? 'Available' : 'Assigned';
+        const driverName = isAvailable ? '' : `<div><i class="fas fa-user-circle"></i> <strong>Driver:</strong> ${car.driver.firstName} ${car.driver.lastName}</div>`;
+
+        return `
+            <div class="car-card ${statusClass}">
+                <div class="car-card-header">
+                    <strong>${car.model}</strong>
+                    <span class="car-card-status ${statusClass}">${statusText}</span>
+                </div>
+                <div class="car-card-body">
+                    <div><i class="fas fa-id-card"></i> <strong>License:</strong> ${car.licensePlate}</div>
+                    <div><i class="fas fa-palette"></i> <strong>Color:</strong> ${car.color}</div>
+                    ${driverName}
+                </div>
+            </div>
+        `;
+    }
+
+    // (تم حذف دالة اختيار الأدوار)
+
+    // --- 🚀 NEW Employee View Navigator 🚀 ---
+    function showEmployeeView(viewId) {
+        employeeHub.style.display = 'none';
+        employeeDriverRegistration.style.display = 'none';
+        employeeCarManagement.style.display = 'none';
+        employeeComplaintsManagement.style.display = 'none';
+
+        const viewToShow = document.getElementById(viewId);
+        if(viewToShow) {
+            viewToShow.style.display = 'block';
+        }
+    }
+
+    // (تم حذف دوال المودالات)
+
+    // --- 🚀 INITIALIZE ALL EVENT LISTENERS WHEN DOM IS READY 🚀 ---
+    document.addEventListener('DOMContentLoaded', (event) => {
+        // (تم حذف كل ما يخص العميل والسائق)
+
+        // Back buttons & Logout buttons
+        document.querySelectorAll('.back-btn').forEach(btn => {
+            // (تعديل زر الرجوع ليعود للصفحة الرئيسية)
+            btn.addEventListener('click', () => window.location.href = 'index.html');
+        });
+        employeeLogoutBtn.addEventListener('click', () => location.reload());
+
+        // Toggle Password
+        appContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('toggle-password')) {
+                const input = e.target.previousElementSibling;
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                e.target.classList.toggle('fa-eye');
+                e.target.classList.toggle('fa-eye-slash');
+            }
+        });
+
+        // (تم حذف كل ما يخص مودالات العميل والسائق)
+
+        // --- 🚀 Employee Logic Listeners (معدل) 🚀 ---
+        employeeRegisterForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = { firstName: document.getElementById('e-firstName').value, lastName: document.getElementById('e-lastName').value, email: document.getElementById('e-email').value, password: document.getElementById('e-password').value, phone: document.getElementById('e-phone').value };
+            const data = await apiCall('/employees/register', 'POST', body, 'Employee Registration');
+            if (data) { showToast('Registration successful! Please login.'); toggleAuth('employee-login-view', 'employee-register-view'); document.getElementById('e-login-email').value = body.email; }
+        });
+
+        employeeLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = { email: document.getElementById('e-login-email').value, password: document.getElementById('e-login-password').value };
+            const data = await apiCall('/employees/login', 'POST', body, 'Employee Login');
+            if (data && data.id) {
+                currentEmployeeId = data.id;
+                currentUser = data;
+                document.getElementById('employee-name').textContent = data.firstName;
+                employeeAuth.style.display = 'none';
+                employeeDashboard.style.display = 'block';
+
+                showEmployeeView('employee-hub');
+
+                await renderAllComplaints();
+                await renderAllCars();
+                await renderAssignmentDropdowns();
+            }
+        });
+
+        employeeRegisterDriverForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = { firstName: document.getElementById('new-d-firstName').value, lastName: document.getElementById('new-d-lastName').value, email: document.getElementById('new-d-email').value, password: document.getElementById('new-d-password').value, phone: document.getElementById('new-d-phone').value, licenseNumber: document.getElementById('new-d-license').value };
+            const data = await apiCall('/drivers/register', 'POST', body, 'Driver Registration');
+             if (data) {
+                 showToast('New driver registered successfully!');
+                 employeeRegisterDriverForm.reset();
+                 await renderAssignmentDropdowns(); // (تحديث قائمة السائقين)
+            }
+        });
+
+        refreshComplaintsBtn.addEventListener('click', () => {
+            showToast('Refreshing complaints list...');
+            renderAllComplaints();
+        });
+
+        // (جديد) Event Listeners لإدارة السيارات
+        refreshCarsBtn.addEventListener('click', () => {
+            showToast('Refreshing car lists...');
+            renderAllCars();
+            renderAssignmentDropdowns();
+        });
+
+        registerCarForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                model: document.getElementById('car-model').value,
+                licensePlate: document.getElementById('car-licensePlate').value,
+                color: document.getElementById('car-color').value
+            };
+            const data = await apiCall('/cars/register', 'POST', body, 'Register Car');
+            if(data) {
+                showToast('Car registered successfully!');
+                registerCarForm.reset();
+                await renderAllCars(); // (تحديث القوائم)
+                await renderAssignmentDropdowns();
+            }
+        });
+
+        assignCarForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const carId = assignCarSelect.value;
+            const driverId = assignDriverSelect.value;
+
+            if(!carId || !driverId) {
+                showToast("Please select both a car and a driver.", true);
+                return;
+            }
+
+            const data = await apiCall(`/cars/assign?carId=${carId}&driverId=${driverId}`, 'POST', null, 'Assign Car');
+            if(data) {
+                showToast('Car assigned successfully!');
+                await renderAllCars(); // (تحديث القوائم)
+                await renderAssignmentDropdowns();
+            }
+        });
+
+        // --- 🚀 NEW Hub Navigation Listeners 🚀 ---
+        document.getElementById('hub-btn-drivers').addEventListener('click', () => {
+            showEmployeeView('employee-driver-registration');
+        });
+
+        document.getElementById('hub-btn-cars').addEventListener('click', () => {
+            showEmployeeView('employee-car-management');
+        });
+
+        document.getElementById('hub-btn-complaints').addEventListener('click', () => {
+            showEmployeeView('employee-complaints-management');
+        });
+
+        // (معدل) Event listener لأزرار الشكاوى والرجوع
+        employeeDashboard.addEventListener('click', async (e) => {
+
+            // (Handle Back to Menu)
+            if (e.target.closest('.employee-back-btn')) {
+                showEmployeeView('employee-hub');
+                return;
+            }
+
+            // (Handle Complaint Buttons)
+            const openBtn = e.target.closest('.open-complaint-btn');
+            const closeBtn = e.target.closest('.close-complaint-btn');
+
+            if (openBtn) {
+                const complaintId = openBtn.dataset.complaintId;
+                openBtn.disabled = true;
+                const data = await apiCall(`/complaints/open/complaint/${complaintId}`, 'POST', null, 'Open Complaint');
+                if (data) {
+                    await renderAllComplaints(); // (تحديث كل القوائم)
+                }
+                openBtn.disabled = false;
+                return;
+            }
+
+            if (closeBtn) {
+                const complaintId = closeBtn.dataset.complaintId;
+                closeBtn.disabled = true;
+                const data = await apiCall(`/complaints/closed/complaint/${complaintId}`, 'POST', null, 'Close Complaint');
+                if (data) {
+                    await renderAllComplaints(); // (تحديث كل القوائم)
+                }
+                closeBtn.disabled = false;
+                return;
+            }
+        });
+
+        // (تم حذف كل ما يخص العميل والسائق)
+
+
+    }); // End of DOMContentLoaded
+
+
+    // (تم حذف كل دوال العميل والسائق)
+
+    // --- 🚀 دالة معدلة لجلب وعرض الشكاوى (بالحالة) 🚀 ---
+    async function renderAllComplaints() {
+        if (!currentEmployeeId) return;
+
+        const emptyNew = getEmptyState('fa-comment-slash', 'No new complaints.');
+        const emptyOpen = getEmptyState('fa-comment-slash', 'No open complaints.');
+        const emptyClosed = getEmptyState('fa-comment-slash', 'No closed complaints.');
+
+        const [newComplaints, openComplaints, closedComplaints] = await Promise.all([
+            apiCall('/complaints/status/NEW', 'GET', null, 'Fetch New Complaints'),
+            apiCall('/complaints/status/OPENED', 'GET', null, 'Fetch Open Complaints'),
+            apiCall('/complaints/status/CLOSED', 'GET', null, 'Fetch Closed Complaints')
+        ]);
+
+        // 1. عرض الشكاوى الجديدة
+        complaintsListNewDiv.innerHTML = '';
+        if (newComplaints && newComplaints.length > 0) {
+            newComplaints.sort((a, b) => b.id - a.id)
+                .forEach(c => { complaintsListNewDiv.innerHTML += createComplaintCard(c); });
+        } else {
+            complaintsListNewDiv.innerHTML = emptyNew;
+        }
+        // 2. عرض الشكاوى المفتوحة
+        complaintsListOpenDiv.innerHTML = '';
+        if (openComplaints && openComplaints.length > 0) {
+            openComplaints.sort((a, b) => b.id - a.id)
+                .forEach(c => { complaintsListOpenDiv.innerHTML += createComplaintCard(c); });
+        } else {
+            complaintsListOpenDiv.innerHTML = emptyOpen;
+        }
+        // 3. عرض الشكاوى المغلقة
+        complaintsListClosedDiv.innerHTML = '';
+        if (closedComplaints && closedComplaints.length > 0) {
+            closedComplaints.sort((a, b) => b.id - a.id)
+                .forEach(c => { complaintsListClosedDiv.innerHTML += createComplaintCard(c); });
+        } else {
+            complaintsListClosedDiv.innerHTML = emptyClosed;
+        }
+    }
+
+    // --- 🚀 دوال جديدة لإدارة السيارات 🚀 ---
+    async function renderAllCars() {
+        if (!currentEmployeeId) return;
+        const cars = await apiCall('/cars', 'GET', null, 'Fetch All Cars');
+        allCarsListDiv.innerHTML = '';
+        if(cars && cars.length > 0) {
+            cars.sort((a, b) => a.id - b.id)
+                .forEach(car => {
+                    allCarsListDiv.innerHTML += createCarCard(car);
+                });
+        } else {
+            allCarsListDiv.innerHTML = getEmptyState('fa-car', 'No cars found.');
+        }
+    }
+
+    async function renderAssignmentDropdowns() {
+        if (!currentEmployeeId) return;
+
+        // (جلب القائمتين بالتوازي)
+        const [availableCars, availableDrivers] = await Promise.all([
+            apiCall('/cars/available', 'GET', null, 'Fetch Available Cars'),
+            apiCall('/drivers/without-car', 'GET', null, 'Fetch Drivers Without Cars')
+        ]);
+
+        // (تعبئة قائمة السيارات المتاحة)
+        assignCarSelect.innerHTML = '';
+        if (availableCars && availableCars.length > 0) {
+            assignCarSelect.innerHTML = '<option value="">-- Select a Car --</option>';
+            availableCars.forEach(car => {
+                const option = document.createElement('option');
+                option.value = car.id;
+                option.textContent = `${car.model} (${car.licensePlate})`;
+                assignCarSelect.appendChild(option);
+            });
+        } else {
+            assignCarSelect.innerHTML = '<option value="">No available cars</option>';
+        }
+
+        // (تعبئة قائمة السائقين المتاحين)
+        assignDriverSelect.innerHTML = '';
+        if (availableDrivers && availableDrivers.length > 0) {
+             assignDriverSelect.innerHTML = '<option value="">-- Select a Driver --</option>';
+            availableDrivers.forEach(driver => {
+                const option = document.createElement('option');
+                option.value = driver.id;
+                option.textContent = `${driver.firstName} ${driver.lastName} (ID: ${driver.id})`;
+                assignDriverSelect.appendChild(option);
+            });
+        } else {
+            assignDriverSelect.innerHTML = '<option value="">No drivers without cars</option>';
+        }
+    }
+
+</script>
+</body>
+</html>
