@@ -11,9 +11,23 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "customers")
 @AttributeOverride(name = "id", column = @Column(name = "customer_id"))
-public class Customer  extends UserBase{
+
+public class Customer extends UserBase {
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
+
+    public Customer(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     public Customer() {
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }

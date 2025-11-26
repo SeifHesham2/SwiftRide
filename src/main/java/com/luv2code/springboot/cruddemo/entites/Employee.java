@@ -5,8 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "employees")
-@AttributeOverride(name = "id" ,column = @Column(name = "employee_id"))
-public class Employee extends UserBase{
-
+@AttributeOverride(name = "id", column = @Column(name = "employee_id"))
+public class Employee extends UserBase {
 
 }

@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import com.luv2code.springboot.cruddemo.service.ImageService;
 
 import java.util.List;
 
@@ -15,9 +17,11 @@ import java.util.List;
 @RequestMapping("/api/drivers")
 public class DriverController {
     private final DriverService driverService;
+    private final ImageService imageService;
 
-    public DriverController(DriverService driverService) {
+    public DriverController(DriverService driverService, ImageService imageService) {
         this.driverService = driverService;
+        this.imageService = imageService;
     }
 
     @PostMapping("/register")
@@ -53,5 +57,17 @@ public class DriverController {
         Driver driver = driverService.rateTheDriver(driverId, rating, tripId);
         DriverDTO dto = DriverMapper.toDTO(driver);
         return new ResponseEntity<>(dto, HttpStatus.OK);
+    }
+
+    @PostMapping("/upload-photo/{id}")
+    public ResponseEntity<?> uploadPhoto(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            String imageUrl = imageService.uploadImage(file);
+            Driver updated = driverService.uploadPhoto(id, imageUrl);
+            DriverDTO dto = DriverMapper.toDTO(updated);
+            return new ResponseEntity<>(dto, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to upload image: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

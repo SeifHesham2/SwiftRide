@@ -33,7 +33,7 @@ public class CarDAOImpl implements CarDAO {
     @Override
     @Transactional
     public Car save(Car car) {
-        return  entityManager.merge(car);
+        return entityManager.merge(car);
     }
 
     @Override
@@ -58,6 +58,18 @@ public class CarDAOImpl implements CarDAO {
             TypedQuery<Car> query = entityManager.createQuery(
                     "SELECT c FROM Car c WHERE c.driver.id = :driverId", Car.class);
             query.setParameter("driverId", driverId);
+            return query.getSingleResult();
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public Car findByLicensePlate(String licensePlate) {
+        try {
+            TypedQuery<Car> query = entityManager.createQuery(
+                    "SELECT c FROM Car c WHERE c.licensePlate = :licensePlate", Car.class);
+            query.setParameter("licensePlate", licensePlate);
             return query.getSingleResult();
         } catch (RuntimeException e) {
             return null;

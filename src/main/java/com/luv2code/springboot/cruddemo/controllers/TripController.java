@@ -3,13 +3,10 @@ package com.luv2code.springboot.cruddemo.controllers;
 import com.luv2code.springboot.cruddemo.dto.TripDTO;
 import com.luv2code.springboot.cruddemo.entites.PaymentMethod;
 import com.luv2code.springboot.cruddemo.entites.Trip;
-import com.luv2code.springboot.cruddemo.mapper.CustomerMapper;
-import com.luv2code.springboot.cruddemo.mapper.DriverMapper;
 import com.luv2code.springboot.cruddemo.mapper.TripMapper;
 import com.luv2code.springboot.cruddemo.service.TripService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

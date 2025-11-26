@@ -10,34 +10,42 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import com.luv2code.springboot.cruddemo.service.ImageService;
 
 @RestController
 @RequestMapping("/api/customers")
 public class CustomerController {
 
     CustomerService customerService;
+    ImageService imageService;
+
     @Autowired
-    public CustomerController(CustomerService customerService) {
+    public CustomerController(CustomerService customerService, ImageService imageService) {
 
         this.customerService = customerService;
+        this.imageService = imageService;
     }
+
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody Customer newCustomer , @RequestParam String token ) {
-        Customer customer = customerService.register(newCustomer,token);
+    public ResponseEntity<?> register(@Valid @RequestBody Customer newCustomer, @RequestParam String token) {
+        Customer customer = customerService.register(newCustomer, token);
         CustomerDTO toDTO = CustomerMapper.toDTO(customer);
         return new ResponseEntity<>(toDTO, HttpStatus.CREATED);
     }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Customer loginCustomer) {
-       Customer customer =  customerService.login(loginCustomer.getEmail(),loginCustomer.getPassword());
-       CustomerDTO customerDTO = CustomerMapper.toDTO(customer);
+        Customer customer = customerService.login(loginCustomer.getEmail(), loginCustomer.getPassword());
+        CustomerDTO customerDTO = CustomerMapper.toDTO(customer);
         return new ResponseEntity<>(customerDTO, HttpStatus.OK);
     }
+
     @PatchMapping("update/{id}")
     public ResponseEntity<?> updateCustomer(@PathVariable Long id, @RequestBody Customer updateData) {
         Customer updated = customerService.partialUpdate(id, updateData);
         CustomerDTO toDTO = CustomerMapper.toDTO(updated);
-        return  new ResponseEntity<>( toDTO , HttpStatus.OK);
+        return new ResponseEntity<>(toDTO, HttpStatus.OK);
 
     }
 
@@ -52,22 +60,33 @@ public class CustomerController {
         String message = customerService.resetPassword(token, newPassword);
         return ResponseEntity.ok(message);
     }
+
     @PostMapping("/register/send-token")
     public ResponseEntity<String> sendVerificationToken(@RequestParam String email, @RequestParam String firstName) {
         boolean isVaild = customerService.sendEmailToken(email, firstName);
         System.out.println("hello");
-        if(!isVaild) ResponseEntity.badRequest();
+        if (!isVaild)
+            ResponseEntity.badRequest();
         return ResponseEntity.ok("Verification token sent to your email.");
     }
+
     @PostMapping("/trip/send-email")
-    public ResponseEntity<String> sendAcceptanceEmail(@RequestParam long customerId, @RequestParam long driverId , @RequestParam long tripId) {
-        customerService.sendDriverAcceptanceEmail(driverId,customerId,tripId);
+    public ResponseEntity<String> sendAcceptanceEmail(@RequestParam long customerId, @RequestParam long driverId,
+            @RequestParam long tripId) {
+        customerService.sendDriverAcceptanceEmail(driverId, customerId, tripId);
         return ResponseEntity.ok("Acceptance sent to your email.");
     }
 
-
+    @PostMapping("/upload-photo/{id}")
+    public ResponseEntity<?> uploadPhoto(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            String imageUrl = imageService.uploadImage(file);
+            Customer updated = customerService.uploadPhoto(id, imageUrl);
+            CustomerDTO toDTO = CustomerMapper.toDTO(updated);
+            return new ResponseEntity<>(toDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to upload image: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }
-
-
-

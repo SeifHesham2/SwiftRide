@@ -1,6 +1,10 @@
 package com.luv2code.springboot.cruddemo.service;
 
 import com.luv2code.springboot.cruddemo.dao.TripDAO;
+import com.luv2code.springboot.cruddemo.decorator.BaseTripDecorator;
+import com.luv2code.springboot.cruddemo.decorator.ChildSeatTripDecorator;
+import com.luv2code.springboot.cruddemo.decorator.PremiumTripDecorator;
+import com.luv2code.springboot.cruddemo.decorator.TripDecorator;
 import com.luv2code.springboot.cruddemo.entites.*;
 import com.luv2code.springboot.cruddemo.exception.*;
 import jakarta.transaction.Transactional;
@@ -30,14 +34,15 @@ public class TripServiceImpl implements TripService {
     private PaymentService paymentService;
     @Autowired
     @Lazy
-    private  CarService carService;
+    private CarService carService;
 
     @Autowired
     public TripServiceImpl(TripDAO tripDAO) {
         this.tripDAO = tripDAO;
     }
 
-    public double calculateFare(String pickup, String destination) {
+    @Transactional
+    public double calculateFare(String pickup, String destination, Trip trip) {
         double[] pickupCoords = locationService.getCoordinates(pickup);
         double[] destCoords = locationService.getCoordinates(destination);
 
@@ -47,7 +52,23 @@ public class TripServiceImpl implements TripService {
 
         double baseFare = 11.80;
         double ratePerKm = 4.30;
-        return baseFare + (distance * ratePerKm);
+        trip.setFare(baseFare + (distance * ratePerKm));
+
+        // Decorator pattern
+        TripDecorator tripDecorator = new BaseTripDecorator(trip);
+
+        if (trip.isPremium()) {
+            tripDecorator = new PremiumTripDecorator(tripDecorator);
+            trip.setPremium(true);
+        }
+        if (trip.isHasChildSeat()) {
+            tripDecorator = new ChildSeatTripDecorator(tripDecorator);
+            trip.setHasChildSeat(true);
+        }
+
+        double finalFare = tripDecorator.getFare();
+        trip.setFare(finalFare); // مهم: تعديل الـ fare هنا
+        return finalFare;
     }
 
     public int calculateEstimatedMinutes(String pickup, String destination) {
@@ -59,6 +80,7 @@ public class TripServiceImpl implements TripService {
                 destCoords[0], destCoords[1]);
 
         int averageSpeedKmPerHour = 40;
+
         return (int) ((distance / averageSpeedKmPerHour) * 60) + 10;
     }
 
@@ -81,8 +103,12 @@ public class TripServiceImpl implements TripService {
             throw new CustomerNotFoundException("This Customer not found");
 
         newTrip.setCustomer(customer);
-        newTrip.setFare(calculateFare(newTrip.getPickupLocation(), newTrip.getDestination()));
-        newTrip.setEstimatedMinutes(calculateEstimatedMinutes(newTrip.getPickupLocation(), newTrip.getDestination()));
+
+        // حساب الـ fare باستخدام decorators
+        calculateFare(newTrip.getPickupLocation(), newTrip.getDestination(), newTrip);
+
+        newTrip.setEstimatedMinutes(
+                calculateEstimatedMinutes(newTrip.getPickupLocation(), newTrip.getDestination()));
         newTrip.setStatus(TripStatus.REQUESTED);
 
         LocalDateTime currentDate = LocalDateTime.now();
@@ -90,8 +116,12 @@ public class TripServiceImpl implements TripService {
             throw new InvalidTripDateException("The date you entered is not valid");
         }
 
+        // Save النهائي بعد تعديل fare
         Trip trip = tripDAO.save(newTrip);
+
+        // بعد كده التعامل مع الدفع
         paymentService.choosePayment(trip, paymentMethod);
+
         return trip;
     }
 
@@ -105,12 +135,17 @@ public class TripServiceImpl implements TripService {
     public Trip acceptTrip(long driverId, long tripId) {
         Driver driver = driverService.findById(driverId);
         Car car = carService.findByDriverId(driverId);
-        if(car==null) throw  new CarNotFoundException("You cannot accept this trip — a car has not been assigned to you yet.");
-        if (driver == null) throw new DriverNotFoundException("Driver not found");
-        if (!driver.isAvailable()) throw new DriverBookedMoreThan3TripsException("The driver cant book more than 3 trips");
+        if (car == null)
+            throw new CarNotFoundException("You cannot accept this trip — a car has not been assigned to you yet.");
+        if (driver == null)
+            throw new DriverNotFoundException("Driver not found");
+        if (!driver.isAvailable())
+            throw new DriverBookedMoreThan3TripsException("The driver cant book more than 3 trips");
         Trip trip = tripDAO.findById(tripId);
-        if (trip == null) throw new TripNotFoundException("Trip not found");
-        if (trip.getStatus() != TripStatus.REQUESTED) {throw new RuntimeException("This trip is not available for acceptance.");
+        if (trip == null)
+            throw new TripNotFoundException("Trip not found");
+        if (trip.getStatus() != TripStatus.REQUESTED) {
+            throw new RuntimeException("This trip is not available for acceptance.");
         }
         List<Trip> driverTrips = tripDAO.findByDriverIdAndStatusIn(
                 driverId, List.of(TripStatus.ACCEPTED, TripStatus.ONGOING));
@@ -123,11 +158,14 @@ public class TripServiceImpl implements TripService {
             boolean overlap = !(newEnd.isBefore(existingStart) || newStart.isAfter(existingEnd));
             long gapBefore = Duration.between(existingEnd, newStart).toMinutes();
             long gapAfter = Duration.between(newEnd, existingStart).toMinutes();
-            if (overlap) {throw new OverlapsTripsException("⚠️ You cannot accept this trip because it overlaps with another trip.");
+            if (overlap) {
+                throw new OverlapsTripsException(
+                        "⚠️ You cannot accept this trip because it overlaps with another trip.");
             }
             if ((gapBefore < MIN_GAP_MINUTES && gapBefore >= 0) ||
                     (gapAfter < MIN_GAP_MINUTES && gapAfter >= 0)) {
-                throw new GapBetweenTripsException("⚠️ There must be at least a " + MIN_GAP_MINUTES + " minute gap between trips.");
+                throw new GapBetweenTripsException(
+                        "⚠️ There must be at least a " + MIN_GAP_MINUTES + " minute gap between trips.");
             }
         }
 
@@ -259,6 +297,7 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
+    @Transactional
     public List<Trip> getCustomerTrips(long customerId) {
         return tripDAO.getCustomerTrips(customerId);
     }

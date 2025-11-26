@@ -4,7 +4,16 @@ public class DriverDTO extends UserBaseDTO {
     private int rating;
     private String licenseNumber;
     private boolean available;
-    private   int currentBookedTrips;
+    private int currentBookedTrips;
+    private String imageUrl;
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     public int getCurrentBookedTrips() {
         return currentBookedTrips;

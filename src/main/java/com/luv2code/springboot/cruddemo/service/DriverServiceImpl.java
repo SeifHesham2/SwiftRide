@@ -132,4 +132,12 @@ public class DriverServiceImpl implements DriverService {
         return driverDAO.save(driver);
 
     }
+
+    @Transactional
+    @Override
+    public Driver uploadPhoto(long driverId, String imageUrl) {
+        Driver driver = findById(driverId);
+        driver.setImageUrl(imageUrl);
+        return driverDAO.save(driver);
+    }
 }

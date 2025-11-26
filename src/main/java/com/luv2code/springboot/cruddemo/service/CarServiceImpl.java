@@ -4,6 +4,7 @@ import com.luv2code.springboot.cruddemo.dao.CarDAO;
 import com.luv2code.springboot.cruddemo.entites.Car;
 import com.luv2code.springboot.cruddemo.entites.Driver;
 import com.luv2code.springboot.cruddemo.exception.CarHasDriverException;
+import com.luv2code.springboot.cruddemo.exception.CarLicensePlateExistsException;
 import com.luv2code.springboot.cruddemo.exception.CarNotFoundException;
 import com.luv2code.springboot.cruddemo.exception.DriverHasCarException;
 import com.luv2code.springboot.cruddemo.exception.DriverNotFoundException;
@@ -36,14 +37,22 @@ public class CarServiceImpl implements CarService {
 
     @Override
     public Car registerCar(Car car, Long driverId) {
+        // Check if license plate already exists
+        Car existingCar = carDAO.findByLicensePlate(car.getLicensePlate());
+        if (existingCar != null) {
+            throw new CarLicensePlateExistsException(
+                    "🚗 A car with license plate '" + car.getLicensePlate()
+                            + "' is already registered in the system. Please use a different license plate.");
+        }
+
         if (driverId != null) {
             Driver driver = driverService.findById(driverId);
             if (driver == null) {
                 throw new DriverNotFoundException("❌ Driver not found with id: " + driverId);
             }
 
-             Car driverCar = carDAO.findByDriverId(driverId);
-            if (driverCar!=null) {
+            Car driverCar = carDAO.findByDriverId(driverId);
+            if (driverCar != null) {
                 throw new DriverHasCarException("❌ Driver already has a car assigned");
             }
 
@@ -51,7 +60,6 @@ public class CarServiceImpl implements CarService {
         }
         return carDAO.save(car);
     }
-
 
     @Override
     public Car assignCarToDriver(long carId, long driverId) {
@@ -63,7 +71,7 @@ public class CarServiceImpl implements CarService {
         }
 
         Car driverCar = carDAO.findByDriverId(driverId);
-        if (driverCar!=null) {
+        if (driverCar != null) {
             throw new DriverHasCarException("❌ Driver already has a car assigned");
         }
         car.setDriver(driver);
@@ -82,7 +90,7 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public Car  findByDriverId(long driverId) {
+    public Car findByDriverId(long driverId) {
         return carDAO.findByDriverId(driverId);
     }
 }

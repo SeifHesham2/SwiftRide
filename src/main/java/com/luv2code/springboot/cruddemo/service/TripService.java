@@ -13,31 +13,32 @@ public interface TripService {
 
     public List<Trip> findByStatus(TripStatus tripStatus);
 
-    public Trip bookTrip(Trip trip, Long customerId , PaymentMethod paymentMethod);
+    public Trip bookTrip(Trip trip, Long customerId, PaymentMethod paymentMethod);
 
     public Trip findById(long id);
 
-    public Trip acceptTrip(long driverId , long tripId );
+    public Trip acceptTrip(long driverId, long tripId);
 
     public List<Trip> findRequestedTrips();
 
-    public Trip driverStartTrip(long driverId , long tripId );
+    public Trip driverStartTrip(long driverId, long tripId);
 
-    public Trip driverEndTrip(long driverId , long tripId );
+    public Trip driverEndTrip(long driverId, long tripId);
 
-    public Trip canceledByCustomer(long customerId , long tripId );
+    public Trip canceledByCustomer(long customerId, long tripId);
 
-    public Trip canceledByDriver(long driverId , long tripId );
+    public Trip canceledByDriver(long driverId, long tripId);
 
     public List<Trip> getCustomerTrips(long customerId);
 
     public int calculateEstimatedMinutes(String pickup, String destination);
+
+    public double calculateFare(String pickup, String destination, Trip trip);
 
     public List<Trip> getDriverActiveTrips(long driverId);
 
     public void checkExpiredTrips();
 
     public List<Trip> getCustomerPreviousTrips(long customerId);
-
 
 }

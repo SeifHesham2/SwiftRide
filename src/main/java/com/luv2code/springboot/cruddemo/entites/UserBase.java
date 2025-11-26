@@ -29,10 +29,7 @@ public abstract class UserBase {
     private String email;
 
     @NotBlank(message = "Phone number is required")
-    @Pattern(
-            regexp = "^(010|011|012|015)\\d{8}$",
-            message = "Mobile number must start with 010, 011, 012, or 015 and be 11 digits long"
-    )
+    @Pattern(regexp = "^(010|011|012|015)\\d{8}$", message = "Mobile number must start with 010, 011, 012, or 015 and be 11 digits long")
     @Column(name = "phone")
     private String phone;
 
@@ -45,11 +42,9 @@ public abstract class UserBase {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
 
     public String getEmail() {
         return email;
@@ -96,4 +91,3 @@ public abstract class UserBase {
     }
 
 }
-

@@ -30,6 +30,18 @@ public class Driver extends UserBase {
     @Column(name = "current_booked_trips")
     int currentBookedTrips;
 
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
+
+    // Getter for imageUrl
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public int getCurrentBookedTrips() {
         return currentBookedTrips;
     }

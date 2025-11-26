@@ -16,4 +16,6 @@ public interface CarDAO {
     List<Car> findAvailableCars();
 
     Car findByDriverId(long driverId);
+
+    Car findByLicensePlate(String licensePlate);
 }

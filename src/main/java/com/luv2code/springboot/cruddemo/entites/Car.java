@@ -19,7 +19,7 @@ public class Car {
     private String model;
 
     @NotBlank(message = "the car licensePlate can not be null")
-    @Column(name = "license_plate")
+    @Column(name = "license_plate", unique = true)
     private String licensePlate;
 
     @NotBlank(message = "the car color can not be null")
@@ -61,7 +61,6 @@ public class Car {
     public long getId() {
         return id;
     }
-
 
     public String getModel() {
         return model;

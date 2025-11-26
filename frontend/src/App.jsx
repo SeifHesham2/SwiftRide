@@ -3,10 +3,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import CustomerDashboard from './pages/CustomerDashboard';
 import DriverDashboard from './pages/DriverDashboard';
-import EmployeeLogin from './pages/EmployeeLogin';
-import EmployeeDashboard from './pages/EmployeeDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -31,53 +31,47 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
+import { ThemeProvider } from './context/ThemeContext';
+
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Landing />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Landing />} />
 
-          {/* Customer Routes - Public */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+            {/* Customer Routes - Public */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Employee Routes - Separate Portal */}
-          <Route path="/employee/login" element={<EmployeeLogin />} />
+            {/* Protected Dashboards */}
+            <Route
+              path="/customer/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['CUSTOMER']}>
+                  <CustomerDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Protected Dashboards */}
-          <Route
-            path="/customer/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['CUSTOMER']}>
-                <CustomerDashboard />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/driver/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['DRIVER']}>
+                  <DriverDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/driver/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['DRIVER']}>
-                <DriverDashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/employee/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['EMPLOYEE']}>
-                <EmployeeDashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Catch all - redirect to landing */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            {/* Catch all - redirect to landing */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -57,6 +57,14 @@ export const customerAPI = {
 
     forgotPassword: (email) => api.post(`/customers/forgot-password?email=${encodeURIComponent(email)}`),
     resetPassword: (token, newPassword) => api.post(`/customers/reset-password?token=${encodeURIComponent(token)}&newPassword=${encodeURIComponent(newPassword)}`),
+
+    uploadPhoto: (id, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post(`/customers/upload-photo/${id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    },
 };
 
 export const driverAPI = {
@@ -64,6 +72,14 @@ export const driverAPI = {
     updateProfile: (id, data) => api.patch(`/drivers/update/${id}`, data),
     getDriversWithoutCar: () => api.get('/drivers/without-car'),
     rateDriver: (driverId, rating, tripId) => api.post(`/drivers/rate/${driverId}?rating=${rating}&tripId=${tripId}`),
+
+    uploadPhoto: (id, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post(`/drivers/upload-photo/${id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    },
 };
 
 export const employeeAPI = {

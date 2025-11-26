@@ -1,6 +1,7 @@
 package com.luv2code.springboot.cruddemo.entites;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
@@ -46,7 +47,7 @@ public class Trip {
     @Column(name = "fare")
     private Double fare;
 
-    @Column(name="rated")
+    @Column(name = "rated")
     private boolean rated = false;
 
     public boolean isRated() {
@@ -59,6 +60,30 @@ public class Trip {
 
     @Column(name = "estimated_minutes")
     private int estimatedMinutes;
+
+    @JsonProperty("isPremium")
+    @Column(name = "is_premium", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean isPremium = false;
+
+    @JsonProperty("hasChildSeat")
+    @Column(name = "has_child_seat", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean hasChildSeat = false;
+
+    public boolean isPremium() {
+        return isPremium;
+    }
+
+    public void setPremium(boolean premium) {
+        isPremium = premium;
+    }
+
+    public boolean isHasChildSeat() {
+        return hasChildSeat;
+    }
+
+    public void setHasChildSeat(boolean hasChildSeat) {
+        this.hasChildSeat = hasChildSeat;
+    }
 
     public int getEstimatedMinutes() {
         return estimatedMinutes;

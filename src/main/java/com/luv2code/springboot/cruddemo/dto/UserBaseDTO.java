@@ -6,6 +6,7 @@ public class UserBaseDTO {
     private String lastName;
     private String email;
     private String phone;
+    private String imageUrl;
 
     public String getPhone() {
         return phone;
@@ -45,5 +46,13 @@ public class UserBaseDTO {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
