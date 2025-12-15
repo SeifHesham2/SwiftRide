@@ -1,4 +1,4 @@
-🚀 **Excited to share SwiftRide - A Full-Stack Ride Sharing Platform!**
+🚀 **Excited to share SwiftRide - A Full-Stack, Dockerized Ride Sharing Platform!**
 
 I've built a comprehensive ride-sharing application demonstrating enterprise-level design patterns and clean architecture.
 
@@ -32,12 +32,13 @@ I've built a comprehensive ride-sharing application demonstrating enterprise-lev
 ✅ Role-based security (Spring Security)
 ✅ Profile photo upload
 ✅ Complaint management system
+✅ **Fully Dockerized Environment** 🐳
 
 ---
 
 ## 🛠️ **Tech Stack:**
 
-**Backend:** Spring Boot, Spring Data JPA, MySQL, RabbitMQ, Spring Security, Maven
+**Backend:** Spring Boot, Spring Data JPA, MySQL, RabbitMQ, Spring Security, Docker, Maven
 
 **Frontend:** React, Vite, Tailwind CSS, Dark Mode - *crafted with Antigravity AI*
 
@@ -59,4 +60,4 @@ I've built a comprehensive ride-sharing application demonstrating enterprise-lev
 
 ---
 
-#SpringBoot #Java #DesignPatterns #BackendDevelopment #FullStack #CleanArchitecture #SoftwareEngineering #AI #Antigravity
+#SpringBoot #Java #DesignPatterns #BackendDevelopment #FullStack #CleanArchitecture #Docker #DevOps #SoftwareEngineering #AI #Antigravity

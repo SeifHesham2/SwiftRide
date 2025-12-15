@@ -105,7 +105,34 @@ Separation of concerns with dedicated service classes:
 - **Node.js & npm**
 - **Maven**
 
-## 🏃 Running the Application
+## 🐳 Docker Deployment (Recommended)
+This project is fully containerized using Docker Compose.
+
+### Prerequisites
+- Docker & Docker Compose
+- Local MySQL Server (running on port 3306)
+
+### How to Run
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/SeifHesham2/SwiftRide.git
+   cd SwiftRide
+   ```
+2. **Start the application**:
+   ```bash
+   docker-compose up --build
+   ```
+   **Note**: The application is configured to connect to your **local MySQL database** via `host.docker.internal`.
+
+### Access the Application
+- **Customer/Driver Frontend**: [http://localhost:3002](http://localhost:3002)
+- **Employee Portal**: [http://localhost:3003](http://localhost:3003)
+- **Backend API**: [http://localhost:8081](http://localhost:8081)
+- **RabbitMQ Dashboard**: [http://localhost:15672](http://localhost:15672) (User/Pass: guest/guest)
+
+---
+
+## 🏃 Manual Installation (Alternative)
 
 ### Backend
 ```bash
