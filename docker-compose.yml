@@ -33,10 +33,10 @@ services:
       SPRING_RABBITMQ_PASSWORD: guest
       SPRING_MAIL_HOST: smtp.gmail.com
       SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: seifhesham2030@gmail.com
-      SPRING_MAIL_PASSWORD: cvvd vcmz rhyt wvpc
+      SPRING_MAIL_USERNAME: your_email
+      SPRING_MAIL_PASSWORD: your_email_password
     ports:
-      - "8081:8080" # Changed to 8081 to avoid conflict with local backend
+      - "8081:8080" 
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -52,7 +52,7 @@ services:
       dockerfile: Dockerfile
     container_name: miniuber-frontend
     ports:
-      - "3002:80" # Changed to 3002 to avoid port conflicts
+      - "3002:80" 
     depends_on:
       - backend
     networks:
@@ -65,7 +65,7 @@ services:
       dockerfile: Dockerfile
     container_name: miniuber-employee-portal
     ports:
-      - "3003:80" # Changed to 3003 to avoid port conflicts
+      - "3003:80" 
     depends_on:
       - backend
     networks:
