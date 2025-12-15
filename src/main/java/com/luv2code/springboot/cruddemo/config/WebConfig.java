@@ -16,8 +16,11 @@ public class WebConfig {
                 registry.addMapping("/**")
                         .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
                                 "http://localhost:5176", "http://localhost:5500", "http://localhost:3000",
-                                "http://localhost:8080")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH");
+                                "http://localhost:3002", "http://localhost:3003", "http://localhost:8080",
+                                "http://localhost:8081")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
             }
 
             @Override

@@ -54,7 +54,7 @@ public class TripServiceImpl implements TripService {
         double ratePerKm = 4.30;
         trip.setFare(baseFare + (distance * ratePerKm));
 
-        // Decorator pattern
+        
         TripDecorator tripDecorator = new BaseTripDecorator(trip);
 
         if (trip.isPremium()) {
@@ -67,7 +67,7 @@ public class TripServiceImpl implements TripService {
         }
 
         double finalFare = tripDecorator.getFare();
-        trip.setFare(finalFare); // مهم: تعديل الـ fare هنا
+        trip.setFare(finalFare); 
         return finalFare;
     }
 

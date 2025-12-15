@@ -1,0 +1,79 @@
+services:
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: miniuber-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI
+    networks:
+      - miniuber-network
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      timeout: 10s
+      retries: 5
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: miniuber-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3306/miniuber
+      SPRING_DATASOURCE_USERNAME: springstudent
+      SPRING_DATASOURCE_PASSWORD: springstudent
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: seifhesham2030@gmail.com
+      SPRING_MAIL_PASSWORD: cvvd vcmz rhyt wvpc
+    ports:
+      - "8081:8080" # Changed to 8081 to avoid conflict with local backend
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - miniuber-network
+    volumes:
+      - ./uploads:/app/uploads
+
+  # Frontend (Customer Portal)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: miniuber-frontend
+    ports:
+      - "3002:80" # Changed to 3002 to avoid port conflicts
+    depends_on:
+      - backend
+    networks:
+      - miniuber-network
+
+  # Employee Portal
+  employee-portal:
+    build:
+      context: ./employee-portal
+      dockerfile: Dockerfile
+    container_name: miniuber-employee-portal
+    ports:
+      - "3003:80" # Changed to 3003 to avoid port conflicts
+    depends_on:
+      - backend
+    networks:
+      - miniuber-network
+
+networks:
+  miniuber-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

@@ -15,7 +15,11 @@ bin/
 *.log
 *.lock
 
-# Frontend
+# Uploads (Sensitive/Personal)
+uploads/
+mysql-data/
+
+# Frontend (Customer)
 frontend/node_modules/
 frontend/dist/
 frontend/.env
@@ -26,3 +30,9 @@ frontend/.env.production.local
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
+
+# Frontend (Employee)
+employee-portal/node_modules/
+employee-portal/dist/
+employee-portal/.env
+employee-portal/npm-debug.log*
